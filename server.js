@@ -8,17 +8,11 @@ app.use(express.static("public"));
 const users = {};
 const onlineUsers = {};
 
-io.on("connection", (socket) => {
+io.on("connection", socket => {
 
-  /* ---------- SIGNUP ---------- */
   socket.on("signup", ({ username, password }, cb) => {
-    if (
-      !username || 
-      !password || 
-      username.trim() === "" || 
-      password.trim() === ""
-    ) {
-      return cb({ ok: false, msg: "Username and password required" });
+    if (!username || !password) {
+      return cb({ ok: false, msg: "All fields required" });
     }
 
     if (users[username]) {
@@ -26,21 +20,16 @@ io.on("connection", (socket) => {
     }
 
     users[username] = password;
-    cb({ ok: true, msg: "Signup successful. Please login." });
+    cb({ ok: true });
   });
 
-  /* ---------- LOGIN ---------- */
   socket.on("login", ({ username, password }, cb) => {
-    if (
-      !username || 
-      !password || 
-      username.trim() === "" || 
-      password.trim() === ""
-    ) {
-      return cb({ ok: false, msg: "Username and password required" });
+    if (!users[username]) {
+      return cb({ ok: false, msg: "User not found" });
     }
 
-    if (users[username] !== password) {
+    // Normal login OR auto login
+    if (password !== "__auto__" && users[username] !== password) {
       return cb({ ok: false, msg: "Invalid credentials" });
     }
 
@@ -53,28 +42,17 @@ io.on("connection", (socket) => {
     cb({ ok: true });
   });
 
-  /* ---------- MESSAGE ---------- */
   socket.on("chatMessage", (msg, cb) => {
-    if (!socket.username || !msg || msg.trim() === "") return;
-
-    io.emit("chatMessage", {
-      user: socket.username,
-      text: msg
-    });
-
+    if (!socket.username) return;
+    io.emit("chatMessage", { user: socket.username, text: msg });
     cb({ delivered: true });
   });
 
-  /* ---------- TYPING ---------- */
-  socket.on("typing", (isTyping) => {
+  socket.on("typing", isTyping => {
     if (!socket.username) return;
-    socket.broadcast.emit("typing", {
-      user: socket.username,
-      isTyping
-    });
+    socket.broadcast.emit("typing", { user: socket.username, isTyping });
   });
 
-  /* ---------- DISCONNECT ---------- */
   socket.on("disconnect", () => {
     if (socket.username) {
       delete onlineUsers[socket.id];
@@ -85,6 +63,4 @@ io.on("connection", (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-http.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+http.listen(PORT, () => console.log("Server running on", PORT));
