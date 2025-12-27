@@ -1,181 +1,174 @@
 * {
   box-sizing: border-box;
-  font-family: "Segoe UI", Arial, sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 body {
   margin: 0;
-  background: linear-gradient(135deg, #ece5dd, #d2dbdc);
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  color: white;
 }
 
-/* ======================
-   ANIMATIONS
-====================== */
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(15px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.fade-in {
-  animation: fadeIn 0.4s ease-out;
-}
-
-.slide-up {
-  animation: slideUp 0.3s ease-out;
-}
-
-/* ======================
-   USERNAME SCREEN
-====================== */
-.username-container {
+/* Screens */
+.screen {
   height: 100vh;
-  display: flex;
-  justify-content: center;
+  display: none;
   align-items: center;
+  justify-content: center;
 }
 
-.username-card {
-  background: white;
+.screen.active {
+  display: flex;
+}
+
+/* Glass Card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px);
   padding: 30px;
   width: 90%;
   max-width: 360px;
-  border-radius: 14px;
+  border-radius: 20px;
   text-align: center;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.4);
 }
 
-.username-card h2 {
+.glass-card h1 {
   margin-bottom: 5px;
+  font-size: 28px;
 }
 
-.username-card p {
-  color: #666;
+.glass-card p {
   font-size: 14px;
-  margin-bottom: 20px;
+  opacity: 0.8;
+  margin-bottom: 25px;
 }
 
-.username-card input {
+/* Inputs */
+.glass-card input {
   width: 100%;
   padding: 14px;
-  font-size: 16px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-  margin-bottom: 15px;
-}
-
-.username-card button {
-  width: 100%;
-  padding: 14px;
-  background: #25d366;
-  color: white;
+  border-radius: 14px;
   border: none;
-  border-radius: 10px;
+  font-size: 16px;
+  margin-bottom: 15px;
+  outline: none;
+}
+
+.glass-card button {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, #ff4ecd, #5f9cff);
+  color: white;
   font-size: 16px;
   cursor: pointer;
-  transition: transform 0.1s, box-shadow 0.1s;
+  transition: transform 0.15s ease;
 }
 
-.username-card button:active {
-  transform: scale(0.97);
+.glass-card button:active {
+  transform: scale(0.95);
 }
 
-/* ======================
-   CHAT SCREEN
-====================== */
-.chat-container {
-  height: 100vh;
-  max-width: 420px;
-  margin: auto;
-  display: flex;
+/* Chat Layout */
+#chat-screen {
   flex-direction: column;
-  background: #f0f0f0;
 }
 
-.chat-header {
-  background: #075e54;
-  color: white;
+.top-bar {
   padding: 16px;
   text-align: center;
-  font-size: 18px;
-  letter-spacing: 0.5px;
+  font-weight: 600;
+  background: rgba(0,0,0,0.25);
+  backdrop-filter: blur(10px);
 }
 
 #chat-box {
   flex: 1;
-  padding: 12px;
+  width: 100%;
+  padding: 15px;
   overflow-y: auto;
-  background: #efeae2;
 }
 
 /* Messages */
 .message {
   max-width: 75%;
-  padding: 10px 14px;
-  margin: 8px 0;
-  border-radius: 14px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  border-radius: 18px;
   font-size: 14px;
-  word-wrap: break-word;
-  animation: slideUp 0.25s ease-out;
+  animation: floatIn 0.25s ease;
 }
 
 .me {
-  background: #dcf8c6;
   margin-left: auto;
-  border-bottom-right-radius: 4px;
+  background: linear-gradient(135deg, #5f9cff, #8fd3f4);
+  color: #000;
 }
 
 .other {
-  background: white;
-  border-bottom-left-radius: 4px;
+  background: rgba(255,255,255,0.15);
 }
 
 .system {
   text-align: center;
   font-size: 12px;
-  color: #777;
+  opacity: 0.6;
   margin: 10px 0;
 }
 
-/* ======================
-   INPUT AREA
-====================== */
-.chat-input {
+/* Input bar */
+.input-bar {
   display: flex;
-  padding: 10px;
-  background: white;
-  border-top: 1px solid #ddd;
+  padding: 12px;
+  background: rgba(0,0,0,0.3);
 }
 
-.chat-input input {
+.input-bar input {
   flex: 1;
-  padding: 12px 14px;
-  border-radius: 25px;
-  border: 1px solid #ccc;
+  padding: 14px;
+  border-radius: 999px;
+  border: none;
+  outline: none;
   font-size: 15px;
 }
 
-.chat-input button {
+.input-bar button {
   margin-left: 10px;
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   border: none;
-  background: #25d366;
+  background: linear-gradient(135deg, #ff4ecd, #5f9cff);
   color: white;
   font-size: 18px;
   cursor: pointer;
-  transition: transform 0.1s;
 }
 
-.chat-input button:active {
-  transform: scale(0.9);
+/* Animations */
+@keyframes floatIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-.hidden {
-  display: none;
+.pop {
+  animation: pop 0.4s ease;
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }

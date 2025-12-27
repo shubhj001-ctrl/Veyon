@@ -1,7 +1,8 @@
 const socket = io();
 
-const usernameContainer = document.getElementById("username-container");
-const chatContainer = document.getElementById("chat-container");
+const usernameScreen = document.getElementById("username-screen");
+const chatScreen = document.getElementById("chat-screen");
+
 const usernameForm = document.getElementById("username-form");
 const usernameInput = document.getElementById("username-input");
 
@@ -11,7 +12,7 @@ const chatBox = document.getElementById("chat-box");
 
 let username = "";
 
-// Join chat
+// Join
 usernameForm.addEventListener("submit", (e) => {
   e.preventDefault();
   username = usernameInput.value.trim();
@@ -19,11 +20,11 @@ usernameForm.addEventListener("submit", (e) => {
 
   socket.emit("join", username);
 
-  usernameContainer.classList.add("hidden");
-  chatContainer.classList.remove("hidden");
+  usernameScreen.classList.remove("active");
+  chatScreen.classList.add("active");
 });
 
-// Send message
+// Send
 chatForm.addEventListener("submit", (e) => {
   e.preventDefault();
   if (!messageInput.value.trim()) return;
@@ -49,7 +50,7 @@ socket.on("chatMessage", (data) => {
   chatBox.scrollTop = chatBox.scrollHeight;
 });
 
-// System messages
+// System
 socket.on("systemMessage", (msg) => {
   const div = document.createElement("div");
   div.className = "system";
