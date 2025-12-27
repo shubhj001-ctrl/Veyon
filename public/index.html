@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <title>VibeChat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -27,10 +27,6 @@
 
 <!-- Chat Screen -->
 <div class="screen" id="chat-screen">
-  <header class="top-bar">
-    <span>💬 VibeChat</span>
-  </header>
-
   <div id="chat-box"></div>
 
   <form id="chat-form" class="input-bar">
@@ -39,8 +35,9 @@
       type="text"
       placeholder="Type something cool…"
       autocomplete="off"
+      disabled
     />
-    <button type="submit">⚡</button>
+    <button type="submit" disabled>⚡</button>
   </form>
 </div>
 

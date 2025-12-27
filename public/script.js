@@ -14,7 +14,7 @@ const chatBox = document.getElementById("chat-box");
 let username = "";
 let joined = false;
 
-// Join chat
+// Join
 usernameForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
@@ -24,7 +24,6 @@ usernameForm.addEventListener("submit", (e) => {
   socket.emit("join", username);
   joined = true;
 
-  // Enable input only AFTER join
   messageInput.disabled = false;
   sendButton.disabled = false;
 
@@ -32,12 +31,10 @@ usernameForm.addEventListener("submit", (e) => {
   chatScreen.classList.add("active");
 });
 
-// Send message
+// Send
 chatForm.addEventListener("submit", (e) => {
   e.preventDefault();
-
-  if (!joined) return;
-  if (!messageInput.value.trim()) return;
+  if (!joined || !messageInput.value.trim()) return;
 
   socket.emit("chatMessage", messageInput.value);
   messageInput.value = "";
@@ -45,7 +42,7 @@ chatForm.addEventListener("submit", (e) => {
 
 // Receive message
 socket.on("chatMessage", (data) => {
-  if (!data || !data.user || !data.text) return;
+  if (!data || !data.user) return;
 
   const div = document.createElement("div");
   div.classList.add("message");
@@ -62,10 +59,8 @@ socket.on("chatMessage", (data) => {
   chatBox.scrollTop = chatBox.scrollHeight;
 });
 
-// System messages
+// System
 socket.on("systemMessage", (msg) => {
-  if (!msg) return;
-
   const div = document.createElement("div");
   div.className = "system";
   div.textContent = msg;
