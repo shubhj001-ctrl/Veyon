@@ -80,21 +80,24 @@ html, body {
 
 /* MESSAGE CONTAINERS */
 .message {
-  max-width: 70%;
-  padding: 12px 16px;
-  margin: 8px 0;
-  border-radius: 18px;
+  max-width: 60%;
+  padding: 12px 14px;
+  margin: 6px 0;
+  border-radius: 16px;
   font-size: 14px;
+  line-height: 1.4;
   animation: floatIn 0.2s ease;
-  word-wrap: break-word;
+  word-break: break-word;
 }
 
 /* MY MESSAGE */
 .me {
   margin-left: auto;
-  background: linear-gradient(135deg, #5f9cff, #8fd3f4);
+  background: linear-gradient(135deg, #6aa6ff, #8fd3f4);
   color: #000;
-  text-align: right;
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
 }
 
 /* OTHER MESSAGE */
@@ -104,16 +107,20 @@ html, body {
   color: #fff;
 }
 
-/* USERNAME LABEL */
+/* USERNAME */
 .other .user {
   font-size: 11px;
   opacity: 0.6;
   margin-bottom: 4px;
 }
 
-/* DELIVERY */
-.delivered::after {
-  content: " ✓";
+/* MESSAGE TEXT */
+.text {
+  white-space: pre-wrap;
+}
+
+/* DELIVERY TICK */
+.tick {
   font-size: 11px;
   opacity: 0.6;
 }
@@ -123,7 +130,7 @@ html, body {
   text-align: center;
   font-size: 12px;
   opacity: 0.5;
-  margin: 12px 0;
+  margin: 10px 0;
 }
 
 

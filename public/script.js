@@ -16,24 +16,17 @@ const passInput = document.getElementById("auth-pass");
 const primaryBtn = document.getElementById("primary-btn");
 const switchBtn = document.getElementById("switch-btn");
 
-/* Toggle login/signup */
 switchBtn.onclick = () => {
   isLogin = !isLogin;
-
   authTitle.textContent = isLogin ? "Welcome back 👋" : "Create account ✨";
-  authSub.textContent = isLogin
-    ? "Login to continue"
-    : "Signup to get started";
-
+  authSub.textContent = isLogin ? "Login to continue" : "Signup to get started";
   primaryBtn.textContent = isLogin ? "Login" : "Signup";
   switchBtn.textContent = isLogin
     ? "Don’t have an account? Signup"
     : "Already have an account? Login";
-
   authMsg.textContent = "";
 };
 
-/* Primary action */
 primaryBtn.onclick = () => {
   const username = userInput.value.trim();
   const password = passInput.value.trim();
@@ -72,36 +65,38 @@ const onlineCount = document.getElementById("online-count");
 
 document.getElementById("chat-form").onsubmit = e => {
   e.preventDefault();
-  if (!msgInput.value.trim()) return;
+  const text = msgInput.value.trim();
+  if (!text) return;
 
-  socket.emit("chatMessage", msgInput.value, ack => {
+  // Create message bubble immediately
+  const bubble = document.createElement("div");
+  bubble.className = "message me";
+  bubble.innerHTML = `<span class="text">${text}</span><span class="tick">⏳</span>`;
+  chatBox.appendChild(bubble);
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  socket.emit("chatMessage", text, ack => {
     if (ack?.delivered) {
-      const div = document.createElement("div");
-      div.className = "message me delivered";
-      div.textContent = msgInput.value;
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
+      bubble.querySelector(".tick").textContent = "✓";
     }
   });
 
   msgInput.value = "";
 };
 
-/* RECEIVE MESSAGE */
+/* RECEIVE */
 socket.on("chatMessage", data => {
   const div = document.createElement("div");
   div.className = "message other";
-
   div.innerHTML = `
     <div class="user">${data.user}</div>
-    <div>${data.text}</div>
+    <div class="text">${data.text}</div>
   `;
-
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 });
 
-/* ONLINE USERS */
+/* ONLINE */
 socket.on("onlineCount", n => {
   onlineCount.textContent = `🟢 ${n} online`;
 });
