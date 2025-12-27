@@ -1,101 +1,71 @@
-const socket = io({ autoConnect: true });
+const socket = io();
 
-const usernameScreen = document.getElementById("username-screen");
+/* AUTH */
+const authScreen = document.getElementById("auth-screen");
 const chatScreen = document.getElementById("chat-screen");
 
-const usernameForm = document.getElementById("username-form");
-const usernameInput = document.getElementById("username-input");
+const userInput = document.getElementById("auth-user");
+const passInput = document.getElementById("auth-pass");
+const authMsg = document.getElementById("auth-msg");
 
-const chatForm = document.getElementById("chat-form");
-const messageInput = document.getElementById("message");
-const chatBox = document.getElementById("chat-box");
-const leaveBtn = document.getElementById("leave-btn");
+document.getElementById("login-btn").onclick = () => auth("login");
+document.getElementById("signup-btn").onclick = () => auth("signup");
 
-let username = localStorage.getItem("vibe-username") || "";
-let joined = false;
+function auth(type) {
+  socket.emit(type, {
+    username: userInput.value,
+    password: passInput.value
+  }, res => {
+    if (!res.ok) return authMsg.textContent = res.msg || "Error";
 
-/* ---------- AUTO REJOIN ON RECONNECT ---------- */
-socket.on("connect", () => {
-  if (username) {
-    socket.emit("join", username);
-    joined = true;
-
-    usernameScreen.classList.remove("active");
+    authScreen.classList.remove("active");
     chatScreen.classList.add("active");
-  }
-});
+  });
+}
 
-/* ---------- JOIN ---------- */
-usernameForm.addEventListener("submit", (e) => {
+/* CHAT */
+const chatBox = document.getElementById("chat-box");
+const typingDiv = document.getElementById("typing");
+const onlineCount = document.getElementById("online-count");
+const msgInput = document.getElementById("message");
+
+document.getElementById("chat-form").onsubmit = (e) => {
   e.preventDefault();
+  if (!msgInput.value) return;
 
-  username = usernameInput.value.trim();
-  if (!username) return;
+  socket.emit("chatMessage", msgInput.value, (ack) => {
+    if (ack.delivered) {
+      const el = document.createElement("div");
+      el.className = "message delivered me";
+      el.textContent = msgInput.value;
+      chatBox.appendChild(el);
+    }
+  });
 
-  localStorage.setItem("vibe-username", username);
-  socket.emit("join", username);
-  joined = true;
+  msgInput.value = "";
+};
 
-  usernameScreen.classList.remove("active");
-  chatScreen.classList.add("active");
-
-  setTimeout(() => messageInput.focus(), 300);
+/* RECEIVE */
+socket.on("chatMessage", data => {
+  const el = document.createElement("div");
+  el.className = "message other";
+  el.textContent = `${data.user}: ${data.text}`;
+  chatBox.appendChild(el);
 });
 
-/* ---------- SEND MESSAGE ---------- */
-chatForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  if (!joined || !socket.connected) {
-    alert("Reconnecting… please try again ✨");
-    return;
-  }
-
-  if (!messageInput.value.trim()) return;
-
-  socket.emit("chatMessage", messageInput.value);
-  messageInput.value = "";
+/* ONLINE COUNT */
+socket.on("onlineCount", n => {
+  onlineCount.textContent = `🟢 ${n} online`;
 });
 
-/* ---------- RECEIVE MESSAGE ---------- */
-socket.on("chatMessage", (data) => {
-  if (!data || !data.user) return;
+/* TYPING */
+let typingTimeout;
+msgInput.oninput = () => {
+  socket.emit("typing", true);
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => socket.emit("typing", false), 800);
+};
 
-  const div = document.createElement("div");
-  div.classList.add("message");
-
-  if (data.user === username) {
-    div.classList.add("me");
-    div.textContent = data.text;
-  } else {
-    div.classList.add("other");
-    div.textContent = `${data.user}: ${data.text}`;
-  }
-
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
-});
-
-/* ---------- SYSTEM ---------- */
-socket.on("systemMessage", (msg) => {
-  const div = document.createElement("div");
-  div.className = "system";
-  div.textContent = msg;
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
-});
-
-/* ---------- LEAVE CHAT ---------- */
-leaveBtn.addEventListener("click", () => {
-  localStorage.removeItem("vibe-username");
-  joined = false;
-  username = "";
-
-  socket.disconnect();
-  socket.connect();
-
-  chatBox.innerHTML = "";
-
-  chatScreen.classList.remove("active");
-  usernameScreen.classList.add("active");
+socket.on("typing", data => {
+  typingDiv.textContent = data.isTyping ? `${data.user} is typing…` : "";
 });

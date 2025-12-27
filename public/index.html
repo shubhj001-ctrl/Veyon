@@ -7,27 +7,32 @@
 </head>
 <body>
 
-<!-- Username Screen -->
-<div class="screen active" id="username-screen">
+<!-- AUTH SCREEN -->
+<div class="screen active" id="auth-screen">
   <div class="glass-card pop">
     <h1>VibeChat ✨</h1>
-    <p>Say hi. Drop vibes. Talk freely.</p>
 
-    <form id="username-form">
-      <input id="username-input" type="text" placeholder="your vibe name" required />
-      <button type="submit">Enter 🚀</button>
-    </form>
+    <input id="auth-user" placeholder="username" />
+    <input id="auth-pass" type="password" placeholder="password" />
+
+    <button id="login-btn">Login</button>
+    <button id="signup-btn" class="secondary">Signup</button>
+
+    <p id="auth-msg"></p>
   </div>
 </div>
 
-<!-- Chat Screen -->
+<!-- CHAT SCREEN -->
 <div class="screen" id="chat-screen">
-  <button id="leave-btn">Leave ✌️</button>
+  <div class="top-info">
+    <span id="online-count">🟢 0 online</span>
+  </div>
 
   <div id="chat-box"></div>
+  <div id="typing"></div>
 
   <form id="chat-form" class="input-bar">
-    <input id="message" type="text" placeholder="Type something cool…" autocomplete="off" />
+    <input id="message" placeholder="Type something…" autocomplete="off" />
     <button type="submit">⚡</button>
   </form>
 </div>
