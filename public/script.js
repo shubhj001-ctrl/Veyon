@@ -40,7 +40,7 @@ chatForm.addEventListener("submit", (e) => {
   messageInput.value = "";
 });
 
-// Receive message
+// Receive
 socket.on("chatMessage", (data) => {
   if (!data || !data.user) return;
 
