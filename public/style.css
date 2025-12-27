@@ -1,6 +1,9 @@
+/* =====================
+   GLOBAL
+===================== */
 * {
   box-sizing: border-box;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 html, body {
@@ -8,11 +11,13 @@ html, body {
   padding: 0;
   height: 100%;
   background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-  overflow: hidden;
   color: white;
+  overflow: hidden;
 }
 
-/* Screens */
+/* =====================
+   SCREENS
+===================== */
 .screen {
   display: none;
   height: 100%;
@@ -24,22 +29,32 @@ html, body {
 }
 
 /* =====================
-   USERNAME SCREEN
+   AUTH SCREEN
 ===================== */
-#username-screen {
-  align-items: center;
+#auth-screen {
   justify-content: center;
+  align-items: center;
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(20px);
-  padding: 30px;
   width: 90%;
   max-width: 360px;
+  padding: 30px;
   border-radius: 20px;
-  text-align: center;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(20px);
   box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+  text-align: center;
+}
+
+.glass-card h1 {
+  margin-bottom: 6px;
+}
+
+.glass-card p {
+  font-size: 14px;
+  opacity: 0.75;
+  margin-bottom: 20px;
 }
 
 .glass-card input {
@@ -47,9 +62,9 @@ html, body {
   padding: 14px;
   border-radius: 14px;
   border: none;
-  font-size: 16px;
-  margin-bottom: 14px;
+  font-size: 15px;
   outline: none;
+  margin-bottom: 12px;
 }
 
 .glass-card button {
@@ -57,111 +72,155 @@ html, body {
   padding: 14px;
   border-radius: 14px;
   border: none;
-  background: linear-gradient(135deg, #ff4ecd, #5f9cff);
+  font-size: 15px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #6aa6ff, #8fd3f4);
+  color: #000;
+}
+
+.glass-card button.secondary {
+  margin-top: 10px;
+  background: rgba(255,255,255,0.15);
   color: white;
-  font-size: 16px;
+}
+
+#auth-msg {
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+/* =====================
+   CHAT HEADER
+===================== */
+.top-info {
+  text-align: center;
+  font-size: 13px;
+  opacity: 0.8;
+  padding: 10px 0;
 }
 
 /* =====================
    CHAT AREA
 ===================== */
 #chat-screen {
-  position: relative;
   height: 100%;
+  position: relative;
 }
 
-/* Chat messages */
 #chat-box {
   flex: 1;
-  padding: 16px;
-  padding-bottom: 90px; /* space for fixed input */
+  padding: 14px;
+  padding-bottom: 90px;
   overflow-y: auto;
 }
 
-/* MESSAGE CONTAINERS */
-.message {
-  max-width: 60%;
-  padding: 12px 14px;
-  margin: 6px 0;
-  border-radius: 16px;
-  font-size: 14px;
-  line-height: 1.4;
-  animation: floatIn 0.2s ease;
-  word-break: break-word;
-}
-
-/* MY MESSAGE */
-.me {
-  margin-left: auto;
-  background: linear-gradient(135deg, #6aa6ff, #8fd3f4);
-  color: #000;
+/* =====================
+   MESSAGE ROW
+===================== */
+.message-row {
   display: flex;
   align-items: flex-end;
-  gap: 6px;
+  gap: 8px;
+  margin: 6px 0;
 }
 
-/* OTHER MESSAGE */
-.other {
-  margin-right: auto;
-  background: rgba(255,255,255,0.15);
-  color: #fff;
+.message-row.me {
+  justify-content: flex-end;
 }
 
-/* USERNAME */
-.other .user {
-  font-size: 11px;
-  opacity: 0.6;
-  margin-bottom: 4px;
-}
-
-/* MESSAGE TEXT */
-.text {
-  white-space: pre-wrap;
-}
-
-/* DELIVERY TICK */
-.tick {
-  font-size: 11px;
-  opacity: 0.6;
-}
-
-/* SYSTEM */
-.system {
-  text-align: center;
-  font-size: 12px;
-  opacity: 0.5;
-  margin: 10px 0;
-}
-
-
-.me {
-  margin-left: auto;
-  background: linear-gradient(135deg, #5f9cff, #8fd3f4);
-  color: #000;
-}
-
-.other {
-  background: rgba(255,255,255,0.15);
-}
-
-.system {
-  text-align: center;
-  font-size: 12px;
-  opacity: 0.6;
-  margin: 12px 0;
+.message-row.other {
+  justify-content: flex-start;
 }
 
 /* =====================
-   FIXED INPUT BAR
+   AVATAR
+===================== */
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  background: rgba(255,255,255,0.25);
+  color: white;
+}
+
+.avatar.me {
+  background: linear-gradient(135deg, #6aa6ff, #8fd3f4);
+  color: #000;
+}
+
+/* =====================
+   MESSAGE BUBBLES
+===================== */
+.bubble {
+  max-width: 60%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.bubble.me {
+  background: linear-gradient(135deg, #6aa6ff, #8fd3f4);
+  color: #000;
+  border-bottom-right-radius: 6px;
+}
+
+.bubble.other {
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border-bottom-left-radius: 6px;
+}
+
+/* Username (only for others) */
+.bubble .user {
+  font-size: 11px;
+  opacity: 0.6;
+  margin-bottom: 2px;
+}
+
+/* =====================
+   MESSAGE META (TIME + TICK)
+===================== */
+.meta {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 11px;
+  opacity: 0.6;
+  margin-top: 4px;
+}
+
+.tick {
+  font-size: 11px;
+}
+
+/* =====================
+   TYPING INDICATOR
+===================== */
+#typing {
+  font-size: 12px;
+  opacity: 0.6;
+  padding-left: 16px;
+  margin-bottom: 4px;
+}
+
+/* =====================
+   INPUT BAR (FIXED)
 ===================== */
 .input-bar {
   position: fixed;
   left: 0;
   right: 0;
   bottom: env(safe-area-inset-bottom);
-  display: flex;
-  align-items: center;
   padding: 12px;
+  display: flex;
+  gap: 10px;
   background: rgba(0,0,0,0.4);
   backdrop-filter: blur(10px);
 }
@@ -176,60 +235,53 @@ html, body {
 }
 
 .input-bar button {
-  margin-left: 12px;
   width: 48px;
   height: 48px;
   border-radius: 50%;
   border: none;
-  background: linear-gradient(135deg, #ff4ecd, #5f9cff);
-  color: white;
+  cursor: pointer;
   font-size: 18px;
+  background: linear-gradient(135deg, #6aa6ff, #8fd3f4);
+  color: #000;
 }
 
-/* Desktop tweak */
+/* =====================
+   DESKTOP IMPROVEMENTS
+===================== */
 @media (min-width: 768px) {
   .input-bar {
-    max-width: 480px;
+    max-width: 520px;
     margin: auto;
     left: 0;
     right: 0;
   }
 }
-#leave-btn {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  background: rgba(255,255,255,0.15);
-  border: none;
-  color: white;
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-size: 13px;
-  cursor: pointer;
-  z-index: 10;
-}
-/* keep your Gen-Z theme above, add below */
 
-.top-info {
-  text-align: center;
-  font-size: 13px;
-  opacity: 0.8;
-  padding: 8px;
+/* =====================
+   ANIMATIONS
+===================== */
+@keyframes floatIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-#typing {
-  font-size: 12px;
-  opacity: 0.6;
-  padding-left: 16px;
+.pop {
+  animation: pop 0.4s ease;
 }
 
-.message.delivered::after {
-  content: " ✓";
-  font-size: 11px;
-  opacity: 0.6;
-}
-
-.secondary {
-  margin-top: 8px;
-  background: rgba(255,255,255,0.15);
+@keyframes pop {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }

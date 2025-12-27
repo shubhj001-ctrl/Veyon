@@ -2,6 +2,7 @@ const socket = io();
 
 /* ---------- AUTH MODE ---------- */
 let isLogin = true;
+let currentUser = "";
 
 const authScreen = document.getElementById("auth-screen");
 const chatScreen = document.getElementById("chat-screen");
@@ -52,6 +53,7 @@ primaryBtn.onclick = () => {
       return;
     }
 
+    currentUser = username;
     authScreen.classList.remove("active");
     chatScreen.classList.add("active");
   });
@@ -63,15 +65,32 @@ const msgInput = document.getElementById("message");
 const typingDiv = document.getElementById("typing");
 const onlineCount = document.getElementById("online-count");
 
+function timeNow() {
+  return new Date().toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
 document.getElementById("chat-form").onsubmit = e => {
   e.preventDefault();
   const text = msgInput.value.trim();
   if (!text) return;
 
-  // Create message bubble immediately
   const bubble = document.createElement("div");
-  bubble.className = "message me";
-  bubble.innerHTML = `<span class="text">${text}</span><span class="tick">⏳</span>`;
+  bubble.className = "message-row me";
+
+  bubble.innerHTML = `
+    <div class="bubble me">
+      <div class="text">${text}</div>
+      <div class="meta">
+        <span class="time">${timeNow()}</span>
+        <span class="tick">⏳</span>
+      </div>
+    </div>
+    <div class="avatar me">${currentUser[0].toUpperCase()}</div>
+  `;
+
   chatBox.appendChild(bubble);
   chatBox.scrollTop = chatBox.scrollHeight;
 
@@ -84,15 +103,25 @@ document.getElementById("chat-form").onsubmit = e => {
   msgInput.value = "";
 };
 
-/* RECEIVE */
+/* RECEIVE (IGNORE OWN MESSAGES) */
 socket.on("chatMessage", data => {
-  const div = document.createElement("div");
-  div.className = "message other";
-  div.innerHTML = `
-    <div class="user">${data.user}</div>
-    <div class="text">${data.text}</div>
+  if (data.user === currentUser) return;
+
+  const bubble = document.createElement("div");
+  bubble.className = "message-row other";
+
+  bubble.innerHTML = `
+    <div class="avatar other">${data.user[0].toUpperCase()}</div>
+    <div class="bubble other">
+      <div class="user">${data.user}</div>
+      <div class="text">${data.text}</div>
+      <div class="meta">
+        <span class="time">${timeNow()}</span>
+      </div>
+    </div>
   `;
-  chatBox.appendChild(div);
+
+  chatBox.appendChild(bubble);
   chatBox.scrollTop = chatBox.scrollHeight;
 });
 
