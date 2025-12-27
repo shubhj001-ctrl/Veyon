@@ -1,79 +1,85 @@
 const socket = io();
 
-/* SCREENS */
+/* ---------- AUTH MODE ---------- */
+let isLogin = true;
+
 const authScreen = document.getElementById("auth-screen");
 const chatScreen = document.getElementById("chat-screen");
 
-/* AUTH INPUTS */
-const userInput = document.getElementById("auth-user");
-const passInput = document.getElementById("auth-pass");
+const authTitle = document.getElementById("auth-title");
+const authSub = document.getElementById("auth-sub");
 const authMsg = document.getElementById("auth-msg");
 
-document.getElementById("login-btn").onclick = () => login();
-document.getElementById("signup-btn").onclick = () => signup();
+const userInput = document.getElementById("auth-user");
+const passInput = document.getElementById("auth-pass");
 
-/* ---------- SIGNUP ---------- */
-function signup() {
+const primaryBtn = document.getElementById("primary-btn");
+const switchBtn = document.getElementById("switch-btn");
+
+/* Toggle login/signup */
+switchBtn.onclick = () => {
+  isLogin = !isLogin;
+
+  authTitle.textContent = isLogin ? "Welcome back 👋" : "Create account ✨";
+  authSub.textContent = isLogin
+    ? "Login to continue"
+    : "Signup to get started";
+
+  primaryBtn.textContent = isLogin ? "Login" : "Signup";
+  switchBtn.textContent = isLogin
+    ? "Don’t have an account? Signup"
+    : "Already have an account? Login";
+
+  authMsg.textContent = "";
+};
+
+/* Primary action */
+primaryBtn.onclick = () => {
   const username = userInput.value.trim();
   const password = passInput.value.trim();
 
   if (!username || !password) {
-    authMsg.textContent = "⚠️ Enter username and password";
+    authMsg.textContent = "⚠️ Fill all fields";
     authMsg.style.color = "orange";
     return;
   }
 
-  socket.emit("signup", { username, password }, res => {
+  socket.emit(isLogin ? "login" : "signup", { username, password }, res => {
     if (!res.ok) {
       authMsg.textContent = res.msg;
       authMsg.style.color = "red";
       return;
     }
 
-    authMsg.textContent = "✅ Signup successful. Please login.";
-    authMsg.style.color = "lightgreen";
-  });
-}
-
-/* ---------- LOGIN ---------- */
-function login() {
-  const username = userInput.value.trim();
-  const password = passInput.value.trim();
-
-  if (!username || !password) {
-    authMsg.textContent = "⚠️ Enter username and password";
-    authMsg.style.color = "orange";
-    return;
-  }
-
-  socket.emit("login", { username, password }, res => {
-    if (!res.ok) {
-      authMsg.textContent = res.msg;
-      authMsg.style.color = "red";
+    if (!isLogin) {
+      authMsg.textContent = "✅ Signup done. Please login.";
+      authMsg.style.color = "lightgreen";
+      isLogin = true;
+      switchBtn.click();
       return;
     }
 
     authScreen.classList.remove("active");
     chatScreen.classList.add("active");
   });
-}
+};
 
-/* CHAT */
+/* ---------- CHAT ---------- */
 const chatBox = document.getElementById("chat-box");
+const msgInput = document.getElementById("message");
 const typingDiv = document.getElementById("typing");
 const onlineCount = document.getElementById("online-count");
-const msgInput = document.getElementById("message");
 
-document.getElementById("chat-form").onsubmit = (e) => {
+document.getElementById("chat-form").onsubmit = e => {
   e.preventDefault();
   if (!msgInput.value.trim()) return;
 
-  socket.emit("chatMessage", msgInput.value, (ack) => {
+  socket.emit("chatMessage", msgInput.value, ack => {
     if (ack?.delivered) {
-      const el = document.createElement("div");
-      el.className = "message delivered me";
-      el.textContent = msgInput.value;
-      chatBox.appendChild(el);
+      const div = document.createElement("div");
+      div.className = "message me delivered";
+      div.textContent = msgInput.value;
+      chatBox.appendChild(div);
       chatBox.scrollTop = chatBox.scrollHeight;
     }
   });
@@ -81,16 +87,21 @@ document.getElementById("chat-form").onsubmit = (e) => {
   msgInput.value = "";
 };
 
-/* RECEIVE */
+/* RECEIVE MESSAGE */
 socket.on("chatMessage", data => {
-  const el = document.createElement("div");
-  el.className = "message other";
-  el.textContent = `${data.user}: ${data.text}`;
-  chatBox.appendChild(el);
+  const div = document.createElement("div");
+  div.className = "message other";
+
+  div.innerHTML = `
+    <div class="user">${data.user}</div>
+    <div>${data.text}</div>
+  `;
+
+  chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 });
 
-/* ONLINE */
+/* ONLINE USERS */
 socket.on("onlineCount", n => {
   onlineCount.textContent = `🟢 ${n} online`;
 });

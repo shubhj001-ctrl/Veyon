@@ -10,13 +10,16 @@
 <!-- AUTH SCREEN -->
 <div class="screen active" id="auth-screen">
   <div class="glass-card pop">
-    <h1>VibeChat ✨</h1>
+    <h1 id="auth-title">Welcome back 👋</h1>
+    <p id="auth-sub">Login to continue</p>
 
     <input id="auth-user" placeholder="username" />
     <input id="auth-pass" type="password" placeholder="password" />
 
-    <button id="login-btn">Login</button>
-    <button id="signup-btn" class="secondary">Signup</button>
+    <button id="primary-btn">Login</button>
+    <button id="switch-btn" class="secondary">
+      Don’t have an account? Signup
+    </button>
 
     <p id="auth-msg"></p>
   </div>
