@@ -26,13 +26,13 @@ usernameForm.addEventListener("submit", (e) => {
 // Send message
 chatForm.addEventListener("submit", (e) => {
   e.preventDefault();
-  if (messageInput.value.trim() === "") return;
+  if (!messageInput.value.trim()) return;
 
   socket.emit("chatMessage", messageInput.value);
   messageInput.value = "";
 });
 
-// Receive chat message
+// Receive message
 socket.on("chatMessage", (data) => {
   const div = document.createElement("div");
   div.classList.add("message");
@@ -49,7 +49,7 @@ socket.on("chatMessage", (data) => {
   chatBox.scrollTop = chatBox.scrollHeight;
 });
 
-// System messages (join / leave)
+// System messages
 socket.on("systemMessage", (msg) => {
   const div = document.createElement("div");
   div.className = "system";
