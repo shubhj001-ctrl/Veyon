@@ -14,12 +14,19 @@ document.getElementById("signup-btn").onclick = () => signup();
 
 /* ---------- SIGNUP ---------- */
 function signup() {
-  socket.emit("signup", {
-    username: userInput.value.trim(),
-    password: passInput.value.trim()
-  }, res => {
+  const username = userInput.value.trim();
+  const password = passInput.value.trim();
+
+  if (!username || !password) {
+    authMsg.textContent = "⚠️ Enter username and password";
+    authMsg.style.color = "orange";
+    return;
+  }
+
+  socket.emit("signup", { username, password }, res => {
     if (!res.ok) {
       authMsg.textContent = res.msg;
+      authMsg.style.color = "red";
       return;
     }
 
@@ -30,10 +37,16 @@ function signup() {
 
 /* ---------- LOGIN ---------- */
 function login() {
-  socket.emit("login", {
-    username: userInput.value.trim(),
-    password: passInput.value.trim()
-  }, res => {
+  const username = userInput.value.trim();
+  const password = passInput.value.trim();
+
+  if (!username || !password) {
+    authMsg.textContent = "⚠️ Enter username and password";
+    authMsg.style.color = "orange";
+    return;
+  }
+
+  socket.emit("login", { username, password }, res => {
     if (!res.ok) {
       authMsg.textContent = res.msg;
       authMsg.style.color = "red";
@@ -53,7 +66,7 @@ const msgInput = document.getElementById("message");
 
 document.getElementById("chat-form").onsubmit = (e) => {
   e.preventDefault();
-  if (!msgInput.value) return;
+  if (!msgInput.value.trim()) return;
 
   socket.emit("chatMessage", msgInput.value, (ack) => {
     if (ack?.delivered) {
@@ -77,7 +90,7 @@ socket.on("chatMessage", data => {
   chatBox.scrollTop = chatBox.scrollHeight;
 });
 
-/* ONLINE USERS */
+/* ONLINE */
 socket.on("onlineCount", n => {
   onlineCount.textContent = `🟢 ${n} online`;
 });

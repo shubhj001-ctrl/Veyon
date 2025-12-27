@@ -5,24 +5,41 @@ const io = require("socket.io")(http);
 
 app.use(express.static("public"));
 
-/* -------- IN-MEMORY STORAGE (MVP) -------- */
-const users = {};          // { username: password }
-const onlineUsers = {};    // { socketId: username }
+const users = {};
+const onlineUsers = {};
 
-/* -------- SOCKET LOGIC -------- */
 io.on("connection", (socket) => {
-  console.log("Connected:", socket.id);
 
-  /* AUTH */
+  /* ---------- SIGNUP ---------- */
   socket.on("signup", ({ username, password }, cb) => {
+    if (
+      !username || 
+      !password || 
+      username.trim() === "" || 
+      password.trim() === ""
+    ) {
+      return cb({ ok: false, msg: "Username and password required" });
+    }
+
     if (users[username]) {
       return cb({ ok: false, msg: "User already exists" });
     }
+
     users[username] = password;
-    cb({ ok: true });
+    cb({ ok: true, msg: "Signup successful. Please login." });
   });
 
+  /* ---------- LOGIN ---------- */
   socket.on("login", ({ username, password }, cb) => {
+    if (
+      !username || 
+      !password || 
+      username.trim() === "" || 
+      password.trim() === ""
+    ) {
+      return cb({ ok: false, msg: "Username and password required" });
+    }
+
     if (users[username] !== password) {
       return cb({ ok: false, msg: "Invalid credentials" });
     }
@@ -36,9 +53,9 @@ io.on("connection", (socket) => {
     cb({ ok: true });
   });
 
-  /* MESSAGE */
+  /* ---------- MESSAGE ---------- */
   socket.on("chatMessage", (msg, cb) => {
-    if (!socket.username) return;
+    if (!socket.username || !msg || msg.trim() === "") return;
 
     io.emit("chatMessage", {
       user: socket.username,
@@ -48,15 +65,16 @@ io.on("connection", (socket) => {
     cb({ delivered: true });
   });
 
-  /* TYPING */
+  /* ---------- TYPING ---------- */
   socket.on("typing", (isTyping) => {
+    if (!socket.username) return;
     socket.broadcast.emit("typing", {
       user: socket.username,
       isTyping
     });
   });
 
-  /* DISCONNECT */
+  /* ---------- DISCONNECT ---------- */
   socket.on("disconnect", () => {
     if (socket.username) {
       delete onlineUsers[socket.id];
