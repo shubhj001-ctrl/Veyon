@@ -1,10 +1,22 @@
 const socket = io();
 
+/* ---------- STATE ---------- */
+let isLogin = true;
 let currentUser = localStorage.getItem("vibeUser") || "";
-let replyContext = null;
 
+/* ---------- ELEMENTS ---------- */
 const authScreen = document.getElementById("auth-screen");
 const chatScreen = document.getElementById("chat-screen");
+
+const authTitle = document.getElementById("auth-title");
+const authSub = document.getElementById("auth-sub");
+const authMsg = document.getElementById("auth-msg");
+
+const userInput = document.getElementById("auth-user");
+const passInput = document.getElementById("auth-pass");
+
+const primaryBtn = document.getElementById("primary-btn");
+const switchBtn = document.getElementById("switch-btn");
 
 const chatBox = document.getElementById("chat-box");
 const msgInput = document.getElementById("message");
@@ -12,21 +24,76 @@ const fileInput = document.getElementById("file-input");
 const chatForm = document.getElementById("chat-form");
 const onlineCount = document.getElementById("online-count");
 
-const replyBar = document.getElementById("reply-bar");
-const replyUser = document.getElementById("reply-user");
-const replyText = document.getElementById("reply-text");
-const cancelReply = document.getElementById("cancel-reply");
-
 /* ---------- AUTO LOGIN ---------- */
 if (currentUser) {
-  socket.emit("login", { username: currentUser, password: "__auto__" }, res => {
-    if (res.ok) {
+  socket.emit(
+    "login",
+    { username: currentUser, password: "__auto__" },
+    res => {
+      if (res.ok) {
+        authScreen.style.display = "none";
+        chatScreen.classList.add("active");
+        res.history.forEach(addMessage);
+      } else {
+        localStorage.removeItem("vibeUser");
+      }
+    }
+  );
+}
+
+/* ---------- AUTH TOGGLE ---------- */
+switchBtn.onclick = () => {
+  isLogin = !isLogin;
+
+  authTitle.textContent = isLogin ? "Welcome back 👋" : "Create account ✨";
+  authSub.textContent = isLogin ? "Login to continue" : "Signup to get started";
+  primaryBtn.textContent = isLogin ? "Login" : "Signup";
+  switchBtn.textContent = isLogin
+    ? "Don’t have an account? Signup"
+    : "Already have an account? Login";
+
+  authMsg.textContent = "";
+};
+
+/* ---------- LOGIN / SIGNUP ---------- */
+primaryBtn.onclick = () => {
+  const username = userInput.value.trim();
+  const password = passInput.value.trim();
+
+  if (!username || !password) {
+    authMsg.textContent = "⚠️ Fill all fields";
+    authMsg.style.color = "orange";
+    return;
+  }
+
+  socket.emit(
+    isLogin ? "login" : "signup",
+    { username, password },
+    res => {
+      if (!res.ok) {
+        authMsg.textContent = res.msg;
+        authMsg.style.color = "red";
+        return;
+      }
+
+      if (!isLogin) {
+        authMsg.textContent = "✅ Signup successful. Please login.";
+        authMsg.style.color = "lightgreen";
+        isLogin = true;
+        switchBtn.click();
+        return;
+      }
+
+      currentUser = username;
+      localStorage.setItem("vibeUser", username);
+
       authScreen.style.display = "none";
       chatScreen.classList.add("active");
+
       res.history.forEach(addMessage);
     }
-  });
-}
+  );
+};
 
 /* ---------- SEND TEXT ---------- */
 chatForm.onsubmit = e => {
@@ -36,11 +103,9 @@ chatForm.onsubmit = e => {
 
   socket.emit("chatMessage", {
     type: "text",
-    content: text,
-    replyTo: replyContext
+    content: text
   });
 
-  clearReply();
   msgInput.value = "";
 };
 
@@ -56,7 +121,12 @@ fileInput.onchange = () => {
     : null;
 
   if (!type) {
-    alert("Unsupported file");
+    alert("Unsupported file type");
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert("Max 5MB allowed");
     return;
   }
 
@@ -64,10 +134,8 @@ fileInput.onchange = () => {
   reader.onload = () => {
     socket.emit("chatMessage", {
       type,
-      content: reader.result,
-      replyTo: replyContext
+      content: reader.result
     });
-    clearReply();
   };
 
   reader.readAsDataURL(file);
@@ -81,63 +149,26 @@ socket.on("onlineCount", n => {
   onlineCount.textContent = `🟢 ${n} online`;
 });
 
-/* ---------- REPLY UI ---------- */
-cancelReply.onclick = clearReply;
-
-function setReply(msg) {
-  replyContext = {
-    user: msg.user,
-    content: msg.content,
-    type: msg.type
-  };
-
-  replyUser.textContent = msg.user;
-  replyText.textContent =
-    msg.type === "text" ? msg.content : msg.type.toUpperCase();
-
-  replyBar.style.display = "flex";
-}
-
-function clearReply() {
-  replyContext = null;
-  replyBar.style.display = "none";
-}
-
-/* ---------- RENDER MESSAGE ---------- */
+/* ---------- RENDER ---------- */
 function addMessage(msg) {
   const isMe = msg.user === currentUser;
   const row = document.createElement("div");
   row.className = `message-row ${isMe ? "me" : "other"}`;
 
-  let mainContent = "";
-  if (msg.type === "text") mainContent = `<div>${msg.content}</div>`;
-  if (msg.type === "image") mainContent = `<img src="${msg.content}" />`;
-  if (msg.type === "video") mainContent = `<video src="${msg.content}" controls></video>`;
-
-  let replyHtml = "";
-  if (msg.replyTo) {
-    replyHtml = `
-      <div class="reply-preview">
-        <strong>${msg.replyTo.user}</strong>
-        <span>${
-          msg.replyTo.type === "text"
-            ? msg.replyTo.content
-            : msg.replyTo.type.toUpperCase()
-        }</span>
-      </div>
-    `;
-  }
+  let content = "";
+  if (msg.type === "text") content = `<div class="text">${msg.content}</div>`;
+  if (msg.type === "image") content = `<img src="${msg.content}" />`;
+  if (msg.type === "video") content = `<video src="${msg.content}" controls></video>`;
 
   row.innerHTML = `
+    ${!isMe ? `<div class="avatar other">${msg.user[0]}</div>` : ""}
     <div class="bubble ${isMe ? "me" : "other"}">
-      ${replyHtml}
-      ${mainContent}
-      <div class="meta">${new Date(msg.time).toLocaleTimeString()}</div>
-      <button class="reply-btn">↩️</button>
+      ${!isMe ? `<div class="user">${msg.user}</div>` : ""}
+      ${content}
+      <div class="meta">${new Date(msg.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
     </div>
+    ${isMe ? `<div class="avatar me">${currentUser[0]}</div>` : ""}
   `;
-
-  row.querySelector(".reply-btn").onclick = () => setReply(msg);
 
   chatBox.appendChild(row);
   chatBox.scrollTop = chatBox.scrollHeight;

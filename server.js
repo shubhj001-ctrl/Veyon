@@ -12,16 +12,22 @@ const messages = [];
 io.on("connection", socket => {
 
   socket.on("signup", ({ username, password }, cb) => {
-    if (!username || !password) return cb?.({ ok: false });
-    if (users[username]) return cb?.({ ok: false, msg: "User exists" });
+    if (!username || !password)
+      return cb?.({ ok: false, msg: "All fields required" });
+
+    if (users[username])
+      return cb?.({ ok: false, msg: "User exists" });
+
     users[username] = password;
     cb?.({ ok: true });
   });
 
   socket.on("login", ({ username, password }, cb) => {
-    if (!users[username]) return cb?.({ ok: false });
+    if (!users[username])
+      return cb?.({ ok: false, msg: "User not found" });
+
     if (password !== "__auto__" && users[username] !== password)
-      return cb?.({ ok: false });
+      return cb?.({ ok: false, msg: "Invalid credentials" });
 
     socket.username = username;
     onlineUsers[socket.id] = username;
@@ -31,14 +37,13 @@ io.on("connection", socket => {
   });
 
   socket.on("chatMessage", (data, cb) => {
-    if (!socket.username) return;
+    if (!socket.username || !data?.type || !data?.content) return;
 
     const msg = {
       id: Date.now() + Math.random(),
       user: socket.username,
       type: data.type,
       content: data.content,
-      replyTo: data.replyTo || null,
       time: new Date().toISOString()
     };
 
@@ -54,4 +59,6 @@ io.on("connection", socket => {
 });
 
 const PORT = process.env.PORT || 3000;
-http.listen(PORT, () => console.log("Server running", PORT));
+http.listen(PORT, () => {
+  console.log("Server running on", PORT);
+});
