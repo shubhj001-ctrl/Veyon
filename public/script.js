@@ -6,7 +6,7 @@ let replyContext = null;
 
 const isMobile = window.innerWidth <= 768;
 
-/* ELEMENTS */
+/* ================= ELEMENTS ================= */
 const authScreen = document.getElementById("auth-screen");
 const chatScreen = document.getElementById("chat-screen");
 
@@ -30,40 +30,102 @@ const replyUser = document.getElementById("reply-user");
 const replyText = document.getElementById("reply-text");
 const cancelReply = document.getElementById("cancel-reply");
 
-/* INIT */
-authScreen.style.display = "flex";
+/* SEARCH */
+const searchInput = document.getElementById("user-search");
+
+/* STORAGE */
+const LS_USER = "veyon_user";
+
+/* ================= INITIAL UI ================= */
+authScreen.style.display = "none";
 chatScreen.style.display = "none";
 
-/* LOGIN */
+/* ================= APP LOAD ================= */
+document.addEventListener("DOMContentLoaded", () => {
+  const savedUser = localStorage.getItem(LS_USER);
+
+  if (savedUser) {
+    autoLogin(savedUser);
+  } else {
+    showLogin();
+  }
+});
+
+/* ================= UI HELPERS ================= */
+function showLogin() {
+  authScreen.style.display = "flex";
+  chatScreen.style.display = "none";
+}
+
+function showChatShell() {
+  authScreen.style.display = "none";
+  chatScreen.style.display = "flex";
+
+  if (!isMobile) {
+    welcomeScreen.style.display = "flex";
+    chatUI.style.display = "none";
+  }
+}
+
+/* ================= LOGIN ================= */
 loginBtn.onclick = () => {
-  socket.emit(
-    "login",
-    {
-      username: userInput.value.trim(),
-      password: passInput.value.trim()
-    },
-    res => {
-      if (!res.ok) {
-        authMsg.textContent = res.msg;
-        return;
-      }
+  const username = userInput.value.trim();
+  const password = passInput.value.trim();
 
-      currentUser = userInput.value.trim();
-      authScreen.style.display = "none";
-      chatScreen.style.display = "flex";
+  if (!username || !password) {
+    authMsg.textContent = "Enter credentials";
+    return;
+  }
 
-      if (!isMobile) {
-        welcomeScreen.style.display = "flex";
-      }
-
-      renderUserList(res.users);
+  socket.emit("login", { username, password }, res => {
+    if (!res.ok) {
+      authMsg.textContent = res.msg;
+      return;
     }
-  );
+
+    currentUser = username;
+    localStorage.setItem(LS_USER, username);
+
+    showChatShell();
+    renderUserList(res.users);
+  });
 };
 
-/* USERS */
+/* ================= AUTO LOGIN ================= */
+function autoLogin(username) {
+  socket.emit("login", { username, password: "jaggibaba" }, res => {
+    if (!res.ok) {
+      localStorage.removeItem(LS_USER);
+      showLogin();
+      return;
+    }
+
+    currentUser = username;
+    showChatShell();
+    renderUserList(res.users);
+  });
+}
+
+/* ================= USERS LIST ================= */
+let allUsers = [];
+
 function renderUserList(users) {
+  allUsers = users;
+  drawUserList(users);
+}
+
+/* SEARCH FILTER */
+searchInput.oninput = () => {
+  const term = searchInput.value.toLowerCase();
+  const filtered = allUsers.filter(u =>
+    u.toLowerCase().includes(term)
+  );
+  drawUserList(filtered);
+};
+
+function drawUserList(users) {
   userList.innerHTML = "";
+
   users.forEach(u => {
     const li = document.createElement("li");
     li.innerHTML = `
@@ -75,7 +137,7 @@ function renderUserList(users) {
   });
 }
 
-/* OPEN CHAT */
+/* ================= OPEN CHAT ================= */
 function openChat(user) {
   activeChatUser = user;
   chatHeader.textContent = user;
@@ -85,9 +147,7 @@ function openChat(user) {
   if (isMobile) {
     chatScreen.classList.add("mobile-chat-open");
     chatUI.style.display = "flex";
-
-    // 👇 IMPORTANT: add history entry
-    history.pushState({ chatOpen: true }, "");
+    history.pushState({ chat: true }, "");
   } else {
     welcomeScreen.style.display = "none";
     chatUI.style.display = "flex";
@@ -98,17 +158,16 @@ function openChat(user) {
   });
 }
 
-/* BACK BUTTON HANDLING (MOBILE) */
+/* ================= MOBILE BACK ================= */
 window.addEventListener("popstate", () => {
   if (isMobile && chatScreen.classList.contains("mobile-chat-open")) {
-    // Close chat instead of leaving site
     chatScreen.classList.remove("mobile-chat-open");
     chatUI.style.display = "none";
     activeChatUser = null;
   }
 });
 
-/* SEND */
+/* ================= SEND MESSAGE ================= */
 chatForm.onsubmit = e => {
   e.preventDefault();
   if (!activeChatUser) return;
@@ -125,7 +184,7 @@ chatForm.onsubmit = e => {
   clearReply();
 };
 
-/* RECEIVE */
+/* ================= RECEIVE ================= */
 socket.on("privateMessage", msg => {
   if (
     (msg.from === currentUser && msg.to === activeChatUser) ||
@@ -135,7 +194,7 @@ socket.on("privateMessage", msg => {
   }
 });
 
-/* REPLY */
+/* ================= REPLY ================= */
 cancelReply.onclick = clearReply;
 
 function setReply(msg) {
@@ -150,7 +209,7 @@ function clearReply() {
   replyBar.style.display = "none";
 }
 
-/* RENDER MESSAGE */
+/* ================= RENDER MESSAGE ================= */
 function addMessage(msg) {
   const isMe = msg.from === currentUser;
   const row = document.createElement("div");
