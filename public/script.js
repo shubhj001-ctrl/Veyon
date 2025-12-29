@@ -8,9 +8,8 @@ const socket = io({
    STATE
 ====================== */
 let isLogin = true;
-let currentUser = localStorage.getItem("vibeUser") || "";
+let currentUser = "";
 let isUploading = false;
-let wasDisconnected = false;
 let replyContext = null;
 
 /* ======================
@@ -41,29 +40,46 @@ const replyText = document.getElementById("reply-text");
 const cancelReply = document.getElementById("cancel-reply");
 
 /* ======================
-   SOCKET STATUS
+   INITIAL UI
 ====================== */
-socket.on("disconnect", () => {
-  wasDisconnected = true;
-  msgInput.disabled = true;
-});
-
-socket.on("connect", () => {
-  msgInput.disabled = false;
-});
+authScreen.style.display = "flex";
+chatScreen.classList.remove("active");
 
 /* ======================
-   AUTO LOGIN
+   AUTH TOGGLE
 ====================== */
-if (currentUser) {
-  socket.emit("login", { username: currentUser, password: "jaggibaba" }, res => {
-    if (res?.ok) {
-      authScreen.style.display = "none";
-      chatScreen.classList.add("active");
-      renderHistory(res.history);
+switchBtn.onclick = () => {
+  authMsg.textContent = "";
+};
+
+/* ======================
+   LOGIN ONLY (PRIVATE BETA)
+====================== */
+primaryBtn.onclick = () => {
+  const username = userInput.value.trim();
+  const password = passInput.value.trim();
+
+  if (!username || !password) {
+    authMsg.textContent = "⚠️ Enter username & password";
+    authMsg.style.color = "orange";
+    return;
+  }
+
+  socket.emit("login", { username, password }, res => {
+    if (!res?.ok) {
+      authMsg.textContent = res?.msg || "Login failed";
+      authMsg.style.color = "red";
+      return;
     }
+
+    currentUser = username;
+
+    authScreen.style.display = "none";
+    chatScreen.classList.add("active");
+
+    renderHistory(res.history);
   });
-}
+};
 
 /* ======================
    SEND TEXT
