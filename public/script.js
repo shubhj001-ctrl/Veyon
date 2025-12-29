@@ -17,87 +17,90 @@ const messages = document.getElementById("messages");
 const chatForm = document.getElementById("chat-form");
 const messageInput = document.getElementById("message-input");
 
-/* STORAGE KEYS */
-const USER_KEY = "veyon_user";
-const CHAT_KEY = "veyon_active_chat";
-
 /* STATE */
 let currentUser = null;
 let currentChat = null;
+const unread = {};
 
-/* ---------------- LOGIN ---------------- */
-loginBtn.onclick = login;
-
-function login() {
-  const username = usernameInput.value.trim();
-  const password = passwordInput.value.trim();
-
-  if (!username || !password) {
-    loginMsg.innerText = "Enter credentials";
-    return;
-  }
-
-  socket.emit("login", { username, password }, res => {
-    if (!res.ok) {
-      loginMsg.innerText = res.msg;
-      return;
-    }
-
-    currentUser = username;
-    localStorage.setItem(USER_KEY, username);
-
-    loginScreen.classList.add("hidden");
-    app.classList.remove("hidden");
-
-    renderUsers(res.users);
-    showWelcome();
-  });
-}
-
-/* ---------------- AUTO LOGIN (REFRESH FIX) ---------------- */
-socket.on("connect", () => {
-  const savedUser = localStorage.getItem(USER_KEY);
-  if (!savedUser) return;
-
+/* LOGIN */
+loginBtn.onclick = () => {
   socket.emit(
     "login",
-    { username: savedUser, password: "jaggibaba" },
+    {
+      username: usernameInput.value,
+      password: passwordInput.value
+    },
     res => {
-      if (!res.ok) return;
+      if (!res.ok) {
+        loginMsg.innerText = res.msg;
+        return;
+      }
 
-      currentUser = savedUser;
+      currentUser = usernameInput.value;
       loginScreen.classList.add("hidden");
       app.classList.remove("hidden");
 
       renderUsers(res.users);
-
-      const savedChat = localStorage.getItem(CHAT_KEY);
-      if (savedChat) {
-        openChat(savedChat);
-      } else {
-        showWelcome();
-      }
+      showWelcome();
     }
   );
+};
+
+/* PRESENCE */
+socket.on("presence", onlineUsers => {
+  document.querySelectorAll(".status-dot").forEach(dot => {
+    dot.classList.remove("online");
+    if (onlineUsers.includes(dot.dataset.user)) {
+      dot.classList.add("online");
+    }
+  });
 });
 
-/* ---------------- USERS ---------------- */
+/* USERS */
 function renderUsers(users) {
   userList.innerHTML = "";
-  users.forEach(u => {
+
+  users.forEach(user => {
+    unread[user] = unread[user] || 0;
+
     const li = document.createElement("li");
-    li.innerText = u;
-    li.onclick = () => openChat(u);
+    li.className = "user-item";
+
+    const left = document.createElement("div");
+    left.className = "user-left";
+
+    const dot = document.createElement("span");
+    dot.className = "status-dot";
+    dot.dataset.user = user;
+
+    const name = document.createElement("span");
+    name.innerText = user;
+
+    left.appendChild(dot);
+    left.appendChild(name);
+
+    const badge = document.createElement("span");
+    badge.className = "unread";
+    badge.innerText = unread[user];
+    if (!unread[user]) badge.style.display = "none";
+
+    li.appendChild(left);
+    li.appendChild(badge);
+
+    li.onclick = () => openChat(user, badge);
+
     userList.appendChild(li);
   });
 }
 
-/* ---------------- CHAT ---------------- */
-function openChat(user) {
+/* CHAT */
+function openChat(user, badge) {
   currentChat = user;
-  localStorage.setItem(CHAT_KEY, user);
-
   chatTitle.innerText = user;
+
+  unread[user] = 0;
+  if (badge) badge.style.display = "none";
+
   showChatUI();
 
   socket.emit("loadChat", { withUser: user }, res => {
@@ -106,10 +109,9 @@ function openChat(user) {
   });
 }
 
-/* ---------------- SEND (ENTER KEY FIX) ---------------- */
+/* SEND */
 chatForm.addEventListener("submit", e => {
   e.preventDefault();
-
   if (!messageInput.value || !currentChat) return;
 
   socket.emit("sendMessage", {
@@ -120,17 +122,17 @@ chatForm.addEventListener("submit", e => {
   messageInput.value = "";
 });
 
-/* ---------------- RECEIVE ---------------- */
+/* RECEIVE */
 socket.on("message", msg => {
-  if (
-    (msg.from === currentUser && msg.to === currentChat) ||
-    (msg.from === currentChat && msg.to === currentUser)
-  ) {
+  if (msg.from === currentChat || msg.from === currentUser) {
     addMessage(msg);
+  } else {
+    unread[msg.from] = (unread[msg.from] || 0) + 1;
+    renderUsers(Object.keys(unread));
   }
 });
 
-/* ---------------- UI HELPERS ---------------- */
+/* UI */
 function addMessage(msg) {
   const div = document.createElement("div");
   div.className = "message";
