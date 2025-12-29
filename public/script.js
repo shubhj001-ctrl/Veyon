@@ -1,11 +1,11 @@
 const socket = io();
 
-/* ================= STATE ================= */
+/* ===== STATE ===== */
 let currentUser = "";
 let activeChatUser = null;
 let replyContext = null;
 
-/* ================= ELEMENTS ================= */
+/* ===== ELEMENTS ===== */
 const authScreen = document.getElementById("auth-screen");
 const chatScreen = document.getElementById("chat-screen");
 
@@ -26,25 +26,29 @@ const replyUser = document.getElementById("reply-user");
 const replyText = document.getElementById("reply-text");
 const cancelReply = document.getElementById("cancel-reply");
 
-/* ================= LOGIN ================= */
+/* ===== LOGIN ===== */
 loginBtn.onclick = () => {
-  const username = userInput.value.trim();
-  const password = passInput.value.trim();
+  socket.emit(
+    "login",
+    {
+      username: userInput.value.trim(),
+      password: passInput.value.trim()
+    },
+    res => {
+      if (!res.ok) {
+        authMsg.textContent = res.msg;
+        return;
+      }
 
-  socket.emit("login", { username, password }, res => {
-    if (!res.ok) {
-      authMsg.textContent = res.msg;
-      return;
+      currentUser = userInput.value.trim();
+      authScreen.style.display = "none";
+      chatScreen.classList.add("active");
+      renderUserList(res.users);
     }
-
-    currentUser = username;
-    authScreen.style.display = "none";
-    chatScreen.classList.add("active");
-    renderUserList(res.users);
-  });
+  );
 };
 
-/* ================= USERS ================= */
+/* ===== USERS ===== */
 function renderUserList(users) {
   userList.innerHTML = "";
   users.forEach(u => {
@@ -55,7 +59,7 @@ function renderUserList(users) {
   });
 }
 
-/* ================= OPEN CHAT ================= */
+/* ===== OPEN CHAT ===== */
 function openChat(user) {
   activeChatUser = user;
   chatHeader.textContent = user;
@@ -67,7 +71,7 @@ function openChat(user) {
   });
 }
 
-/* ================= SEND ================= */
+/* ===== SEND MESSAGE ===== */
 chatForm.onsubmit = e => {
   e.preventDefault();
   if (!activeChatUser) return;
@@ -88,17 +92,21 @@ chatForm.onsubmit = e => {
   msgInput.value = "";
 };
 
-/* ================= RECEIVE ================= */
+/* ===== RECEIVE ===== */
 socket.on("privateMessage", msg => {
   if (
     (msg.from === currentUser && msg.to === activeChatUser) ||
     (msg.from === activeChatUser && msg.to === currentUser)
   ) {
+    // normalize replyTo (important fix)
+    if (msg.replyTo === undefined && msg.message?.replyTo) {
+      msg.replyTo = msg.message.replyTo;
+    }
     addMessage(msg);
   }
 });
 
-/* ================= REPLY ================= */
+/* ===== REPLY ===== */
 cancelReply.onclick = clearReply;
 
 function setReply(msg) {
@@ -117,9 +125,10 @@ function clearReply() {
   replyBar.style.display = "none";
 }
 
-/* ================= RENDER MESSAGE ================= */
+/* ===== RENDER ===== */
 function addMessage(msg) {
   const isMe = msg.from === currentUser;
+
   const row = document.createElement("div");
   row.className = `message-row ${isMe ? "me" : "other"}`;
 
