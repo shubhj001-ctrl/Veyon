@@ -1,124 +1,63 @@
-/**
- * ===============================
- * VibeChat Server (Complete)
- * ===============================
- */
-
 const express = require("express");
 const http = require("http");
-const path = require("path");
 const { Server } = require("socket.io");
+const path = require("path");
 
-/* ===============================
-   APP + SERVER
-================================ */
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-/* ===============================
-   STATIC FILES
-================================ */
 app.use(express.static(path.join(__dirname, "public")));
 
-/* ===============================
-   USERS (TEMP / HARD-CODED)
-================================ */
-const USERS = {
-  shubh: "jaggibaba",
-  boss: "jaggibaba",
-  weed: "jaggibaba"
-};
+const PORT = 3000;
 
-/* ===============================
-   IN-MEMORY STATE
-================================ */
-// username -> socket.id
-const onlineUsers = {};
+/* USERS */
+const USERS = ["boss", "weed", "shubh"];
+const PASSWORD = "jaggibaba";
 
-// chatKey -> [ messages ]
-const chats = {};
+/* CHAT STORE (in-memory) */
+const chats = {}; 
+// chats[user][peer] = [{ from, to, text, time }]
 
-/* ===============================
-   HELPERS
-================================ */
-function getChatKey(a, b) {
-  return [a, b].sort().join("|");
+function saveMessage(from, to, msg) {
+  if (!chats[from]) chats[from] = {};
+  if (!chats[from][to]) chats[from][to] = [];
+  chats[from][to].push(msg);
 }
 
-/* ===============================
-   SOCKET.IO
-================================ */
+/* SOCKET */
 io.on("connection", socket => {
-  let currentUser = null;
 
-  /* ---------- LOGIN ---------- */
   socket.on("login", ({ username, password }, cb) => {
-    if (!USERS[username] || USERS[username] !== password) {
-      return cb({
-        ok: false,
-        msg: "Invalid username or password"
-      });
+    if (!USERS.includes(username) || password !== PASSWORD) {
+      cb({ ok: false, msg: "Invalid credentials" });
+      return;
     }
 
-    currentUser = username;
-    onlineUsers[username] = socket.id;
-
-    cb({
-      ok: true,
-      users: Object.keys(USERS).filter(u => u !== username)
-    });
+    socket.username = username;
+    cb({ ok: true, users: USERS.filter(u => u !== username) });
   });
 
-  /* ---------- LOAD CHAT ---------- */
   socket.on("loadChat", ({ withUser }, cb) => {
-    if (!currentUser) return;
-
-    const key = getChatKey(currentUser, withUser);
-    cb({
-      history: chats[key] || []
-    });
+    const user = socket.username;
+    const history = chats[user]?.[withUser] || [];
+    cb({ history });
   });
 
-  /* ---------- PRIVATE MESSAGE ---------- */
-  socket.on("privateMessage", ({ to, message }) => {
-    if (!currentUser || !to || !message) return;
-
+  socket.on("sendMessage", ({ to, text }) => {
     const msg = {
-      id: Date.now() + Math.random(),
-      from: currentUser,
-      to: to,
-      content: message.content,
-      replyTo: message.replyTo || null,
-      timestamp: Date.now()
+      from: socket.username,
+      to,               // ✅ FIX
+      text,
+      time: Date.now()
     };
 
-    const key = getChatKey(currentUser, to);
-    if (!chats[key]) chats[key] = [];
-    chats[key].push(msg);
+    saveMessage(socket.username, to, msg);
+    saveMessage(to, socket.username, msg);
 
-    // Send to receiver
-    if (onlineUsers[to]) {
-      io.to(onlineUsers[to]).emit("privateMessage", msg);
-    }
-
-    // Send back to sender (important!)
-    socket.emit("privateMessage", msg);
-  });
-
-  /* ---------- DISCONNECT ---------- */
-  socket.on("disconnect", () => {
-    if (currentUser) {
-      delete onlineUsers[currentUser];
-    }
+    io.emit("message", msg);
   });
 });
-
-/* ===============================
-   START SERVER
-================================ */
-const PORT = process.env.PORT || 3000;
-
 server.listen(PORT, () => {
-  console.log("✅ Server running on port", PORT);
+  console.log(`Veyon running on http://localhost:${PORT}`);
 });
