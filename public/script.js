@@ -34,16 +34,36 @@ const replyUser = document.getElementById("reply-user");
 const replyText = document.getElementById("reply-text");
 const cancelReply = document.getElementById("cancel-reply");
 
+/* === NEW STATUS ELEMENTS === */
+const badge = document.getElementById("connection-badge");
+const statusDot = document.getElementById("status-dot");
+const statusText = document.getElementById("status-text");
+
 /* ======================
-   KEEP ALIVE (CRITICAL)
+   STATUS HELPERS
+====================== */
+function setOnline() {
+  badge.classList.add("hidden");
+  statusDot.classList.remove("offline");
+  statusDot.classList.add("online");
+  statusText.textContent = "Online";
+}
+
+function setOffline() {
+  badge.classList.remove("hidden");
+  statusDot.classList.remove("online");
+  statusDot.classList.add("offline");
+  statusText.textContent = "Offline";
+}
+
+/* ======================
+   KEEP ALIVE
 ====================== */
 function startKeepAlive() {
   stopKeepAlive();
   keepAliveTimer = setInterval(() => {
-    if (socket.connected) {
-      socket.emit("keepAlive");
-    }
-  }, 20000); // every 20 seconds
+    if (socket.connected) socket.emit("keepAlive");
+  }, 20000);
 }
 
 function stopKeepAlive() {
@@ -52,6 +72,30 @@ function stopKeepAlive() {
     keepAliveTimer = null;
   }
 }
+
+/* ======================
+   SOCKET STATUS EVENTS
+====================== */
+socket.on("connect", () => {
+  setOnline();
+  if (currentUser) {
+    socket.emit(
+      "login",
+      { username: currentUser, password: "jaggibaba" },
+      res => {
+        if (res?.ok) {
+          renderHistory(res.history);
+          startKeepAlive();
+        }
+      }
+    );
+  }
+});
+
+socket.on("disconnect", () => {
+  setOffline();
+  stopKeepAlive();
+});
 
 /* ======================
    LOGIN
@@ -74,32 +118,14 @@ primaryBtn.onclick = () => {
     }
 
     currentUser = username;
-
     authScreen.style.display = "none";
     chatScreen.classList.add("active");
 
     renderHistory(res.history);
     startKeepAlive();
+    setOnline();
   });
 };
-
-/* ======================
-   AUTO REJOIN AFTER DISCONNECT
-====================== */
-socket.on("connect", () => {
-  if (currentUser) {
-    socket.emit("login", { username: currentUser, password: "jaggibaba" }, res => {
-      if (res?.ok) {
-        renderHistory(res.history);
-        startKeepAlive();
-      }
-    });
-  }
-});
-
-socket.on("disconnect", () => {
-  stopKeepAlive();
-});
 
 /* ======================
    SEND TEXT
@@ -228,7 +254,10 @@ function addMessage(msg) {
     <div class="bubble ${isMe ? "me" : "other"}">
       ${replyHtml}
       ${content}
-      <div class="meta">${new Date(msg.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+      <div class="meta">${new Date(msg.time).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+      })}</div>
       <button class="reply-btn">↩️</button>
     </div>
   `;

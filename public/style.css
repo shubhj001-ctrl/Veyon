@@ -348,4 +348,49 @@ html, body {
   font-size: 12px;
   opacity: 0.8;
 }
+/* ======================
+   CONNECTION BADGE
+====================== */
+.badge {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: #ff9800;
+  color: #000;
+  margin-right: 10px;
+}
+
+.badge.hidden {
+  display: none;
+}
+
+/* ======================
+   USER STATUS
+====================== */
+.status-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.dot.online {
+  background: #00e676;
+}
+
+.dot.offline {
+  background: #ff5252;
+}
 
