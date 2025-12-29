@@ -305,3 +305,47 @@ html, body {
   margin-top: 6px;
 }
 
+.attach {
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+}
+/* ======================
+   REPLY BAR
+====================== */
+.reply-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  font-size: 13px;
+}
+
+.reply-info {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.reply-bar button {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* ======================
+   REPLY PREVIEW IN MESSAGE
+====================== */
+.reply-preview {
+  border-left: 3px solid rgba(255,255,255,0.5);
+  padding-left: 6px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  opacity: 0.8;
+}
+

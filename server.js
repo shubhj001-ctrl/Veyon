@@ -2,34 +2,18 @@ const express = require("express");
 const app = express();
 const http = require("http").createServer(app);
 
-/* ======================
-   SOCKET.IO CONFIG
-   (mobile + media safe)
-====================== */
 const io = require("socket.io")(http, {
-  pingTimeout: 60000,      // allow backgrounding on mobile
+  pingTimeout: 60000,
   pingInterval: 25000,
-  maxHttpBufferSize: 5e6  // 5MB max payload (base64 safety)
+  maxHttpBufferSize: 5e6
 });
 
-/* ======================
-   STATIC FILES
-====================== */
 app.use(express.static("public"));
 
 /* ======================
    LOAD PRIVATE USERS
 ====================== */
-/*
-  This file contains only default users.
-  Easy to delete later to go public.
-*/
 const defaultUsers = require("./defaultUsers");
-
-/*
-  Users store starts with default users.
-  Later replace this with DB.
-*/
 const users = { ...defaultUsers };
 
 /* ======================
@@ -43,7 +27,7 @@ const messages = [];
 ====================== */
 io.on("connection", socket => {
 
-  /* ---------- LOGIN ONLY (PRIVATE BETA) ---------- */
+  /* ---------- LOGIN ---------- */
   socket.on("login", ({ username, password }, cb) => {
     if (!users[username]) {
       return cb?.({ ok: false, msg: "Access denied" });
@@ -58,21 +42,15 @@ io.on("connection", socket => {
 
     io.emit("onlineCount", Object.keys(onlineUsers).length);
 
-    cb?.({
-      ok: true,
-      history: messages
-    });
+    cb?.({ ok: true, history: messages });
   });
 
   /* ---------- SIGNUP DISABLED ---------- */
   socket.on("signup", (_, cb) => {
-    cb?.({
-      ok: false,
-      msg: "Signup is disabled (private beta)"
-    });
+    cb?.({ ok: false, msg: "Signup disabled" });
   });
 
-  /* ---------- CHAT MESSAGE ---------- */
+  /* ---------- CHAT MESSAGE (WITH REPLY) ---------- */
   socket.on("chatMessage", (data, cb) => {
     if (!socket.username) return;
     if (!data?.type || !data?.content) return;
@@ -80,8 +58,9 @@ io.on("connection", socket => {
     const msg = {
       id: Date.now() + Math.random(),
       user: socket.username,
-      type: data.type,       // text | image | video
-      content: data.content, // text or base64
+      type: data.type,
+      content: data.content,
+      replyTo: data.replyTo || null,
       time: new Date().toISOString()
     };
 

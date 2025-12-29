@@ -11,6 +11,7 @@ let isLogin = true;
 let currentUser = localStorage.getItem("vibeUser") || "";
 let isUploading = false;
 let wasDisconnected = false;
+let replyContext = null;
 
 /* ======================
    ELEMENTS
@@ -34,11 +35,10 @@ const fileInput = document.getElementById("file-input");
 const chatForm = document.getElementById("chat-form");
 const onlineCount = document.getElementById("online-count");
 
-/* ======================
-   INITIAL UI
-====================== */
-authScreen.style.display = "flex";
-chatScreen.classList.remove("active");
+const replyBar = document.getElementById("reply-bar");
+const replyUser = document.getElementById("reply-user");
+const replyText = document.getElementById("reply-text");
+const cancelReply = document.getElementById("cancel-reply");
 
 /* ======================
    SOCKET STATUS
@@ -56,100 +56,14 @@ socket.on("connect", () => {
    AUTO LOGIN
 ====================== */
 if (currentUser) {
-  socket.emit(
-    "login",
-    { username: currentUser, password: "__auto__" },
-    res => {
-      if (res?.ok) {
-        authScreen.style.display = "none";
-        chatScreen.classList.add("active");
-        renderHistory(res.history);
-      } else {
-        localStorage.removeItem("vibeUser");
-      }
-    }
-  );
-}
-
-/* ======================
-   MOBILE BACKGROUND FIX
-====================== */
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") {
-    if (wasDisconnected && currentUser) {
-      socket.connect();
-
-      socket.emit(
-        "login",
-        { username: currentUser, password: "__auto__" },
-        res => {
-          if (res?.ok) {
-            renderHistory(res.history);
-            wasDisconnected = false;
-          }
-        }
-      );
-    }
-  }
-});
-
-/* ======================
-   AUTH TOGGLE
-====================== */
-switchBtn.onclick = () => {
-  isLogin = !isLogin;
-
-  authTitle.textContent = isLogin ? "Welcome back 👋" : "Create account ✨";
-  authSub.textContent = isLogin ? "Login to continue" : "Signup to get started";
-  primaryBtn.textContent = isLogin ? "Login" : "Signup";
-  switchBtn.textContent = isLogin
-    ? "Don’t have an account? Signup"
-    : "Already have an account? Login";
-
-  authMsg.textContent = "";
-};
-
-/* ======================
-   LOGIN / SIGNUP
-====================== */
-primaryBtn.onclick = () => {
-  const username = userInput.value.trim();
-  const password = passInput.value.trim();
-
-  if (!username || !password) {
-    authMsg.textContent = "⚠️ Fill all fields";
-    authMsg.style.color = "orange";
-    return;
-  }
-
-  socket.emit(
-    isLogin ? "login" : "signup",
-    { username, password },
-    res => {
-      if (!res.ok) {
-        authMsg.textContent = res.msg;
-        authMsg.style.color = "red";
-        return;
-      }
-
-      if (!isLogin) {
-        authMsg.textContent = "✅ Signup successful. Please login.";
-        authMsg.style.color = "lightgreen";
-        isLogin = true;
-        switchBtn.click();
-        return;
-      }
-
-      currentUser = username;
-      localStorage.setItem("vibeUser", username);
-
+  socket.emit("login", { username: currentUser, password: "jaggibaba" }, res => {
+    if (res?.ok) {
       authScreen.style.display = "none";
       chatScreen.classList.add("active");
-
       renderHistory(res.history);
     }
-  );
-};
+  });
+}
 
 /* ======================
    SEND TEXT
@@ -163,14 +77,16 @@ chatForm.onsubmit = e => {
 
   socket.emit("chatMessage", {
     type: "text",
-    content: text
+    content: text,
+    replyTo: replyContext
   });
 
+  clearReply();
   msgInput.value = "";
 };
 
 /* ======================
-   SEND MEDIA (SAFE)
+   SEND MEDIA
 ====================== */
 fileInput.onchange = () => {
   const file = fileInput.files[0];
@@ -180,15 +96,13 @@ fileInput.onchange = () => {
   const isVideo = file.type.startsWith("video/");
 
   if (!isImage && !isVideo) {
-    alert("Unsupported file type");
-    fileInput.value = "";
+    alert("Unsupported file");
     return;
   }
 
   const maxSize = isImage ? 2 * 1024 * 1024 : 4 * 1024 * 1024;
   if (file.size > maxSize) {
     alert(isImage ? "Image max 2MB" : "Video max 4MB");
-    fileInput.value = "";
     return;
   }
 
@@ -201,13 +115,16 @@ fileInput.onchange = () => {
       "chatMessage",
       {
         type: isImage ? "image" : "video",
-        content: reader.result
+        content: reader.result,
+        replyTo: replyContext
       },
       () => {
         isUploading = false;
         msgInput.disabled = false;
       }
     );
+
+    clearReply();
   };
 
   reader.readAsDataURL(file);
@@ -217,16 +134,38 @@ fileInput.onchange = () => {
 /* ======================
    RECEIVE MESSAGE
 ====================== */
-socket.on("chatMessage", msg => {
-  addMessage(msg);
-});
+socket.on("chatMessage", msg => addMessage(msg));
 
 socket.on("onlineCount", n => {
   onlineCount.textContent = `🟢 ${n} online`;
 });
 
 /* ======================
-   HELPERS
+   REPLY LOGIC
+====================== */
+cancelReply.onclick = clearReply;
+
+function setReply(msg) {
+  replyContext = {
+    user: msg.user,
+    type: msg.type,
+    content: msg.content
+  };
+
+  replyUser.textContent = msg.user;
+  replyText.textContent =
+    msg.type === "text" ? msg.content : msg.type.toUpperCase();
+
+  replyBar.style.display = "flex";
+}
+
+function clearReply() {
+  replyContext = null;
+  replyBar.style.display = "none";
+}
+
+/* ======================
+   RENDER HELPERS
 ====================== */
 function renderHistory(history = []) {
   chatBox.innerHTML = "";
@@ -240,28 +179,38 @@ function addMessage(msg) {
   row.className = `message-row ${isMe ? "me" : "other"}`;
 
   let content = "";
-  if (msg.type === "text") {
-    content = `<div class="text">${msg.content}</div>`;
-  } else if (msg.type === "image") {
-    content = `<img src="${msg.content}" />`;
-  } else if (msg.type === "video") {
-    content = `<video src="${msg.content}" controls></video>`;
+  if (msg.type === "text") content = `<div class="text">${msg.content}</div>`;
+  if (msg.type === "image") content = `<img src="${msg.content}" />`;
+  if (msg.type === "video") content = `<video src="${msg.content}" controls></video>`;
+
+  let replyHtml = "";
+  if (msg.replyTo) {
+    replyHtml = `
+      <div class="reply-preview">
+        <strong>${msg.replyTo.user}</strong><br/>
+        <span>${
+          msg.replyTo.type === "text"
+            ? msg.replyTo.content
+            : msg.replyTo.type.toUpperCase()
+        }</span>
+      </div>
+    `;
   }
 
   row.innerHTML = `
     ${!isMe ? `<div class="avatar other">${msg.user[0].toUpperCase()}</div>` : ""}
     <div class="bubble ${isMe ? "me" : "other"}">
-      ${!isMe ? `<div class="user">${msg.user}</div>` : ""}
+      ${replyHtml}
       ${content}
       <div class="meta">
-        ${new Date(msg.time).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit"
-        })}
+        ${new Date(msg.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
       </div>
+      <button class="reply-btn">↩️</button>
     </div>
     ${isMe ? `<div class="avatar me">${currentUser[0].toUpperCase()}</div>` : ""}
   `;
+
+  row.querySelector(".reply-btn").onclick = () => setReply(msg);
 
   chatBox.appendChild(row);
   chatBox.scrollTop = chatBox.scrollHeight;
