@@ -66,22 +66,18 @@ function renderUserList(users) {
   userList.innerHTML = "";
   users.forEach(u => {
     const li = document.createElement("li");
-
     li.innerHTML = `
       <div class="chat-avatar">${u.charAt(0).toUpperCase()}</div>
       <div class="chat-name">${u}</div>
     `;
-
     li.onclick = () => openChat(u);
     userList.appendChild(li);
   });
 }
 
-
 /* OPEN CHAT */
 function openChat(user) {
   activeChatUser = user;
-
   chatHeader.textContent = user;
   chatBox.innerHTML = "";
   clearReply();
@@ -89,6 +85,9 @@ function openChat(user) {
   if (isMobile) {
     chatScreen.classList.add("mobile-chat-open");
     chatUI.style.display = "flex";
+
+    // 👇 IMPORTANT: add history entry
+    history.pushState({ chatOpen: true }, "");
   } else {
     welcomeScreen.style.display = "none";
     chatUI.style.display = "flex";
@@ -98,6 +97,16 @@ function openChat(user) {
     res.history.forEach(addMessage);
   });
 }
+
+/* BACK BUTTON HANDLING (MOBILE) */
+window.addEventListener("popstate", () => {
+  if (isMobile && chatScreen.classList.contains("mobile-chat-open")) {
+    // Close chat instead of leaving site
+    chatScreen.classList.remove("mobile-chat-open");
+    chatUI.style.display = "none";
+    activeChatUser = null;
+  }
+});
 
 /* SEND */
 chatForm.onsubmit = e => {
@@ -141,7 +150,7 @@ function clearReply() {
   replyBar.style.display = "none";
 }
 
-/* RENDER */
+/* RENDER MESSAGE */
 function addMessage(msg) {
   const isMe = msg.from === currentUser;
   const row = document.createElement("div");
