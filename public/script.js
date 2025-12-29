@@ -4,6 +4,7 @@ const socket = io();
 let currentUser = null;
 let activeChatUser = null;
 let replyContext = null;
+let appReady = false;
 
 /* ================= ELEMENTS ================= */
 const authScreen = document.getElementById("auth-screen");
@@ -30,15 +31,35 @@ const cancelReply = document.getElementById("cancel-reply");
 const LS_USER = "vibechat_user";
 const LS_ACTIVE_CHAT = "vibechat_active_chat";
 
-/* ================= AUTO LOGIN ON LOAD ================= */
+/* ================= INITIAL UI STATE ================= */
+// 🔒 Hide everything until we decide
+authScreen.style.display = "none";
+chatScreen.style.display = "none";
+
+/* ================= APP BOOTSTRAP ================= */
 document.addEventListener("DOMContentLoaded", () => {
   const savedUser = localStorage.getItem(LS_USER);
   const savedChat = localStorage.getItem(LS_ACTIVE_CHAT);
 
   if (savedUser) {
     autoLogin(savedUser, savedChat);
+  } else {
+    showLogin();
   }
 });
+
+/* ================= UI HELPERS ================= */
+function showLogin() {
+  authScreen.style.display = "flex";
+  chatScreen.style.display = "none";
+  appReady = true;
+}
+
+function showChat() {
+  authScreen.style.display = "none";
+  chatScreen.style.display = "flex";
+  appReady = true;
+}
 
 /* ================= LOGIN ================= */
 loginBtn.onclick = () => {
@@ -59,7 +80,7 @@ loginBtn.onclick = () => {
     currentUser = username;
     localStorage.setItem(LS_USER, username);
 
-    showChatUI();
+    showChat();
     renderUserList(res.users);
   });
 };
@@ -69,23 +90,18 @@ function autoLogin(username, savedChat) {
   socket.emit("login", { username, password: "jaggibaba" }, res => {
     if (!res.ok) {
       localStorage.clear();
+      showLogin();
       return;
     }
 
     currentUser = username;
-    showChatUI();
+    showChat();
     renderUserList(res.users);
 
     if (savedChat) {
       openChat(savedChat);
     }
   });
-}
-
-/* ================= UI HELPERS ================= */
-function showChatUI() {
-  authScreen.style.display = "none";
-  chatScreen.classList.add("active");
 }
 
 /* ================= USERS ================= */
