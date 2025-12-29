@@ -1,159 +1,105 @@
-* {
+body {
   margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html, body {
-  height: 100%;
-  background: radial-gradient(circle at top, #2e2b5f, #0e0c2a);
-  font-family: system-ui, sans-serif;
+  font-family: sans-serif;
+  background: linear-gradient(135deg, #1b1b3a, #2e2e6f);
   color: white;
 }
 
-.hidden {
-  display: none !important;
-}
-
-/* LOGIN */
-.screen {
+#login-view {
   height: 100vh;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  align-items: center;
 }
 
-.login-box {
-  width: 320px;
-  text-align: center;
-}
-
-.login-box input {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 12px;
-  border-radius: 8px;
-  border: none;
-}
-
-.login-box button {
-  width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: none;
-}
-
-/* BRAND */
-.brand-wrap {
-  margin-bottom: 24px;
-}
-
-.brand-small {
-  opacity: 0.6;
-}
-
-.brand-veyon {
-  font-family: "Segoe Script", cursive;
-  font-size: 48px;
-  transform: skew(-8deg);
-}
-
-.brand-hint {
-  font-size: 13px;
-  opacity: 0.7;
-}
-
-/* APP */
-#app {
-  height: 100vh;
-  display: flex;
-}
-
-/* SIDEBAR */
-.sidebar {
-  width: 240px;
-  background: rgba(255,255,255,0.05);
-  padding: 16px;
-}
-
-.sidebar ul {
-  list-style: none;
-}
-
-.user-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+#login-view input, #login-view button {
+  margin: 6px;
   padding: 10px;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.08);
-  margin-bottom: 8px;
-  cursor: pointer;
 }
 
-.user-left {
+#app-view {
+  display: none;
+  height: 100vh;
+}
+
+aside {
+  width: 250px;
+  padding: 20px;
+  background: rgba(0,0,0,0.2);
+}
+
+aside ul {
+  list-style: none;
+  padding: 0;
+}
+
+aside li {
+  padding: 10px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: gray;
+aside li:hover {
+  background: rgba(255,255,255,0.1);
 }
 
-.status-dot.online {
-  background: #4cd964;
-}
-
-.unread {
-  background: crimson;
-  border-radius: 12px;
-  padding: 2px 6px;
-  font-size: 12px;
-}
-
-/* CHAT */
-.chat-area {
+main {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
 .chat-header {
-  padding: 14px;
-  background: rgba(255,255,255,0.05);
+  padding: 15px;
+  background: rgba(0,0,0,0.3);
 }
 
-.welcome-screen {
-  flex: 1;
+.chat-title-wrap {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
 }
 
-.messages {
+#chat-box {
   flex: 1;
-  padding: 16px;
+  padding: 20px;
   overflow-y: auto;
 }
 
-.message {
-  margin-bottom: 8px;
+.msg {
+  margin-bottom: 10px;
 }
 
-.chat-input {
+.msg.me {
+  text-align: right;
+}
+
+footer {
   display: flex;
-  padding: 12px;
-  gap: 10px;
-  background: rgba(0,0,0,0.4);
+  padding: 10px;
+  background: rgba(0,0,0,0.3);
 }
 
-.chat-input input {
+footer input {
   flex: 1;
   padding: 10px;
-  border-radius: 20px;
-  border: none;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: gray;
+}
+
+.status-dot.online {
+  background: #3cff7f;
+}
+
+.badge {
+  margin-left: auto;
+  color: #3cff7f;
 }
