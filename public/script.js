@@ -1,3 +1,6 @@
+/* ===============================
+   ELEMENT REFERENCES
+================================ */
 const loginScreen = document.getElementById("login-screen");
 const app = document.getElementById("app");
 
@@ -7,59 +10,123 @@ const chatInput = document.getElementById("chat-input");
 const chatTitle = document.getElementById("chat-title");
 
 const loginBtn = document.getElementById("login-btn");
+const usernameInput = document.getElementById("username");
+const passwordInput = document.getElementById("password");
+
 const sendBtn = document.getElementById("send-btn");
 const messageInput = document.getElementById("message-input");
 
+/* ===============================
+   STORAGE KEYS
+================================ */
+const USER_KEY = "veyon_user";
+const CHAT_KEY = "veyon_active_chat";
+
+/* ===============================
+   STATE
+================================ */
+let currentUser = null;
 let currentChat = null;
 
-/* LOGIN */
-loginBtn.onclick = () => {
+/* ===============================
+   VIEW HELPERS
+================================ */
+function showLogin() {
+  loginScreen.classList.remove("hidden");
+  app.classList.add("hidden");
+}
+
+function showApp() {
   loginScreen.classList.add("hidden");
   app.classList.remove("hidden");
+}
+
+function showChatWelcome() {
+  chatWelcome.classList.remove("hidden");
+  messages.classList.add("hidden");
+  chatInput.classList.add("hidden");
+  chatTitle.innerText = "Welcome";
+}
+
+function showChatUI() {
+  chatWelcome.classList.add("hidden");
+  messages.classList.remove("hidden");
+  chatInput.classList.remove("hidden");
+}
+
+/* ===============================
+   CHAT LOGIC
+================================ */
+function openChat(username) {
+  currentChat = username;
+  localStorage.setItem(CHAT_KEY, username);
+
+  chatTitle.innerText = username;
+  showChatUI();
+}
+
+/* ===============================
+   LOGIN HANDLING
+================================ */
+loginBtn.onclick = () => {
+  const user = usernameInput.value.trim();
+  const pass = passwordInput.value.trim();
+
+  if (!user || !pass) {
+    alert("Please enter username and password");
+    return;
+  }
+
+  currentUser = user;
+  localStorage.setItem(USER_KEY, user);
+
+  showApp();
+  showChatWelcome();
 };
 
-/* OPEN CHAT */
-document.querySelectorAll(".chat-card").forEach(card => {
-  card.onclick = () => {
-    currentChat = card.dataset.user;
-    chatTitle.innerText = currentChat;
-
-    chatWelcome.classList.add("hidden");
-    messages.classList.remove("hidden");
-    chatInput.classList.remove("hidden");
-  };
-});
-
-/* SEND MESSAGE */
+/* ===============================
+   MESSAGE SENDING (LOCAL ONLY)
+================================ */
 sendBtn.onclick = () => {
-  if (!messageInput.value) return;
+  const text = messageInput.value.trim();
+  if (!text || !currentChat) return;
 
   const msg = document.createElement("div");
   msg.className = "message";
-  msg.innerText = messageInput.value;
+  msg.innerText = text;
 
   messages.appendChild(msg);
   messageInput.value = "";
   messages.scrollTop = messages.scrollHeight;
 };
 
-// ---- SESSION ----
-const SESSION_KEY = "veyon_user";
+/* ===============================
+   CHAT LIST CLICK
+================================ */
+document.querySelectorAll(".chat-card").forEach(card => {
+  card.onclick = () => {
+    openChat(card.dataset.user);
+  };
+});
 
-// On page load
-const savedUser = localStorage.getItem(SESSION_KEY);
-if (savedUser) {
-  loginScreen.classList.add("hidden");
-  app.classList.remove("hidden");
-}
+/* ===============================
+   APP INIT (ON PAGE LOAD)
+================================ */
+(function initApp() {
+  const savedUser = localStorage.getItem(USER_KEY);
+  const savedChat = localStorage.getItem(CHAT_KEY);
 
-// On login
-loginBtn.onclick = () => {
-  const user = document.getElementById("username").value;
-  if (!user) return;
+  if (!savedUser) {
+    showLogin();
+    return;
+  }
 
-  localStorage.setItem(SESSION_KEY, user);
+  currentUser = savedUser;
+  showApp();
 
-  loginScreen.classList.add("hidden");
-  app.classList.remove("hidden");
-};
+  if (savedChat) {
+    openChat(savedChat);
+  } else {
+    showChatWelcome();
+  }
+})();
