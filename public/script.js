@@ -4,6 +4,9 @@ let currentUser = null;
 let activeChatUser = null;
 let replyContext = null;
 
+const isMobile = window.innerWidth <= 768;
+
+/* ELEMENTS */
 const authScreen = document.getElementById("auth-screen");
 const chatScreen = document.getElementById("chat-screen");
 
@@ -27,26 +30,9 @@ const replyUser = document.getElementById("reply-user");
 const replyText = document.getElementById("reply-text");
 const cancelReply = document.getElementById("cancel-reply");
 
-/* INITIAL STATE */
-authScreen.style.display = "none";
+/* INIT */
+authScreen.style.display = "flex";
 chatScreen.style.display = "none";
-
-/* LOAD */
-document.addEventListener("DOMContentLoaded", () => {
-  showLogin();
-});
-
-function showLogin() {
-  authScreen.style.display = "flex";
-  chatScreen.style.display = "none";
-}
-
-function showChatShell() {
-  authScreen.style.display = "none";
-  chatScreen.style.display = "flex";
-  welcomeScreen.style.display = "flex";
-  chatUI.style.display = "none";
-}
 
 /* LOGIN */
 loginBtn.onclick = () => {
@@ -63,7 +49,13 @@ loginBtn.onclick = () => {
       }
 
       currentUser = userInput.value.trim();
-      showChatShell();
+      authScreen.style.display = "none";
+      chatScreen.style.display = "flex";
+
+      if (!isMobile) {
+        welcomeScreen.style.display = "flex";
+      }
+
       renderUserList(res.users);
     }
   );
@@ -83,11 +75,18 @@ function renderUserList(users) {
 /* OPEN CHAT */
 function openChat(user) {
   activeChatUser = user;
-  welcomeScreen.style.display = "none";
-  chatUI.style.display = "flex";
+
   chatHeader.textContent = user;
   chatBox.innerHTML = "";
   clearReply();
+
+  if (isMobile) {
+    chatScreen.classList.add("mobile-chat-open");
+    chatUI.style.display = "flex";
+  } else {
+    welcomeScreen.style.display = "none";
+    chatUI.style.display = "flex";
+  }
 
   socket.emit("loadChat", { withUser: user }, res => {
     res.history.forEach(addMessage);
