@@ -237,10 +237,3 @@ function addMessage(msg) {
   chatBox.appendChild(row);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
-const veyonLogo = document.getElementById("veyon-logo");
-
-if (veyonLogo) {
-  veyonLogo.onclick = () => {
-    veyonLogo.classList.toggle("glow");
-  };
-}
