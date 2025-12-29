@@ -1,105 +1,124 @@
+/**
+ * ===============================
+ * VibeChat Server (Complete)
+ * ===============================
+ */
+
 const express = require("express");
+const http = require("http");
+const path = require("path");
+const { Server } = require("socket.io");
+
+/* ===============================
+   APP + SERVER
+================================ */
 const app = express();
-const http = require("http").createServer(app);
+const server = http.createServer(app);
+const io = new Server(server);
 
-const io = require("socket.io")(http, {
-  pingTimeout: 60000,
-  pingInterval: 25000,
-  maxHttpBufferSize: 5e6
-});
+/* ===============================
+   STATIC FILES
+================================ */
+app.use(express.static(path.join(__dirname, "public")));
 
-app.use(express.static("public"));
+/* ===============================
+   USERS (TEMP / HARD-CODED)
+================================ */
+const USERS = {
+  shubh: "jaggibaba",
+  boss: "jaggibaba",
+  weed: "jaggibaba"
+};
 
-/* ======================
-   USERS (PRIVATE BETA)
-====================== */
-const defaultUsers = require("./defaultUsers");
-const users = { ...defaultUsers };
+/* ===============================
+   IN-MEMORY STATE
+================================ */
+// username -> socket.id
+const onlineUsers = {};
 
-/* ======================
-   STATE
-====================== */
-const onlineUsers = {}; // socket.id -> username
-const conversations = {}; // convoId -> messages[]
+// chatKey -> [ messages ]
+const chats = {};
 
-/* ======================
+/* ===============================
    HELPERS
-====================== */
-function getConvoId(u1, u2) {
-  return [u1, u2].sort().join("__");
+================================ */
+function getChatKey(a, b) {
+  return [a, b].sort().join("|");
 }
 
-/* ======================
-   SOCKET
-====================== */
+/* ===============================
+   SOCKET.IO
+================================ */
 io.on("connection", socket => {
+  let currentUser = null;
 
   /* ---------- LOGIN ---------- */
   socket.on("login", ({ username, password }, cb) => {
-    if (!users[username]) {
-      return cb?.({ ok: false, msg: "Access denied" });
+    if (!USERS[username] || USERS[username] !== password) {
+      return cb({
+        ok: false,
+        msg: "Invalid username or password"
+      });
     }
-    if (users[username] !== password) {
-      return cb?.({ ok: false, msg: "Invalid password" });
-    }
 
-    socket.username = username;
-    onlineUsers[socket.id] = username;
+    currentUser = username;
+    onlineUsers[username] = socket.id;
 
-    io.emit("onlineUsers", Object.values(onlineUsers));
-
-    cb?.({ ok: true, users: Object.keys(users).filter(u => u !== username) });
+    cb({
+      ok: true,
+      users: Object.keys(USERS).filter(u => u !== username)
+    });
   });
 
   /* ---------- LOAD CHAT ---------- */
   socket.on("loadChat", ({ withUser }, cb) => {
-    if (!socket.username) return;
+    if (!currentUser) return;
 
-    const convoId = getConvoId(socket.username, withUser);
-    conversations[convoId] ??= [];
-
-    cb?.({ history: conversations[convoId] });
+    const key = getChatKey(currentUser, withUser);
+    cb({
+      history: chats[key] || []
+    });
   });
 
-  /* ---------- SEND MESSAGE ---------- */
-  socket.on("privateMessage", ({ to, message }, cb) => {
-    if (!socket.username || !users[to]) return;
-
-    const convoId = getConvoId(socket.username, to);
+  /* ---------- PRIVATE MESSAGE ---------- */
+  socket.on("privateMessage", ({ to, message }) => {
+    if (!currentUser || !to || !message) return;
 
     const msg = {
       id: Date.now() + Math.random(),
-      from: socket.username,
-      to,
-      type: message.type,
+      from: currentUser,
+      to: to,
       content: message.content,
-      time: new Date().toISOString()
+      replyTo: message.replyTo || null,
+      timestamp: Date.now()
     };
 
-    conversations[convoId] ??= [];
-    conversations[convoId].push(msg);
+    const key = getChatKey(currentUser, to);
+    if (!chats[key]) chats[key] = [];
+    chats[key].push(msg);
 
-    // Send to both users
-    for (const [sid, user] of Object.entries(onlineUsers)) {
-      if (user === socket.username || user === to) {
-        io.to(sid).emit("privateMessage", msg);
-      }
+    // Send to receiver
+    if (onlineUsers[to]) {
+      io.to(onlineUsers[to]).emit("privateMessage", msg);
     }
 
-    cb?.({ delivered: true });
+    // Send back to sender (important!)
+    socket.emit("privateMessage", msg);
   });
 
   /* ---------- DISCONNECT ---------- */
   socket.on("disconnect", () => {
-    delete onlineUsers[socket.id];
-    io.emit("onlineUsers", Object.values(onlineUsers));
+    if (currentUser) {
+      delete onlineUsers[currentUser];
+    }
   });
 });
 
-/* ======================
-   START
-====================== */
+/* ===============================
+   START SERVER
+================================ */
 const PORT = process.env.PORT || 3000;
-http.listen(PORT, () => {
-  console.log("Server running on", PORT);
+
+server.listen(PORT, () => {
+  console.log("✅ Server running on port", PORT);
 });
