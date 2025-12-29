@@ -1,8 +1,17 @@
+/* HARD RESET */
+#login-view,
+#app-view {
+  display: none;
+}
+
+/* Base layout */
 body {
   margin: 0;
-  font-family: sans-serif;
+  font-family: system-ui, sans-serif;
   background: linear-gradient(135deg, #1b1b3a, #2e2e6f);
   color: white;
+  height: 100vh;
+  overflow: hidden;
 }
 
 #login-view {
