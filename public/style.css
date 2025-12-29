@@ -68,32 +68,70 @@ body {
   display: flex;
 }
 
-/* ---------- SIDEBAR ---------- */
+/* ---------- SIDEBAR / PEOPLE ---------- */
 .sidebar {
-  width: 220px;
-  background: rgba(255,255,255,0.06);
+  width: 260px;
+  background: rgba(255,255,255,0.05);
   padding: 16px;
+  overflow-y: auto;
+}
+
+.sidebar h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 18px;
+  opacity: 0.9;
 }
 
 .sidebar ul {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 
+/* CHAT CARD */
 .sidebar li {
-  padding: 12px;
-  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.08);
   cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
 }
 
 .sidebar li:hover {
-  background: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.14);
+}
+
+.sidebar li:active {
+  transform: scale(0.97);
+}
+
+/* AVATAR */
+.chat-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7aa2ff, #8fd3f4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #000;
+}
+
+/* NAME */
+.chat-name {
+  font-size: 15px;
+  font-weight: 500;
 }
 
 /* ---------- MAIN ---------- */
 .chat-main {
   flex: 1;
-  position: relative;
   display: flex;
   flex-direction: column;
 }
@@ -113,6 +151,7 @@ body {
   display: none;
   flex: 1;
   flex-direction: column;
+  animation: fadeUp 0.25s ease;
 }
 
 .chat-header {
@@ -149,7 +188,7 @@ body {
 
 /* ---------- MESSAGES ---------- */
 .message-row {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   display: flex;
 }
 
@@ -177,9 +216,8 @@ body {
   margin-bottom: 6px;
 }
 
-/* ================= MOBILE ================= */
+/* ---------- MOBILE ---------- */
 @media (max-width: 768px) {
-
   .chat-screen {
     flex-direction: column;
   }
@@ -213,5 +251,17 @@ body {
 
   .chat-box {
     padding-bottom: 80px;
+  }
+}
+
+/* ---------- ANIMATION ---------- */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

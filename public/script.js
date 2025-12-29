@@ -66,11 +66,17 @@ function renderUserList(users) {
   userList.innerHTML = "";
   users.forEach(u => {
     const li = document.createElement("li");
-    li.textContent = u;
+
+    li.innerHTML = `
+      <div class="chat-avatar">${u.charAt(0).toUpperCase()}</div>
+      <div class="chat-name">${u}</div>
+    `;
+
     li.onclick = () => openChat(u);
     userList.appendChild(li);
   });
 }
+
 
 /* OPEN CHAT */
 function openChat(user) {
