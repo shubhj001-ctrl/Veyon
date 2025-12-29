@@ -48,7 +48,7 @@ loginBtn.onclick = () => {
   );
 };
 
-/* ================= USER LIST ================= */
+/* ================= USERS ================= */
 function renderUserList(users) {
   userList.innerHTML = "";
   users.forEach(u => {
@@ -67,10 +67,7 @@ function openChat(user) {
   clearReply();
 
   socket.emit("loadChat", { withUser: user }, res => {
-    res.history.forEach(msg => {
-      normalizeMessage(msg);
-      addMessage(msg);
-    });
+    res.history.forEach(addMessage);
   });
 }
 
@@ -97,8 +94,6 @@ chatForm.onsubmit = e => {
 
 /* ================= RECEIVE MESSAGE ================= */
 socket.on("privateMessage", msg => {
-  normalizeMessage(msg);
-
   if (
     (msg.from === currentUser && msg.to === activeChatUser) ||
     (msg.from === activeChatUser && msg.to === currentUser)
@@ -106,15 +101,6 @@ socket.on("privateMessage", msg => {
     addMessage(msg);
   }
 });
-
-/* ================= NORMALIZE MESSAGE ================= */
-function normalizeMessage(msg) {
-  // flatten server payload → UI payload
-  if (msg.message) {
-    msg.content = msg.content ?? msg.message.content;
-    msg.replyTo = msg.replyTo ?? msg.message.replyTo;
-  }
-}
 
 /* ================= REPLY ================= */
 cancelReply.onclick = clearReply;
@@ -125,7 +111,7 @@ function setReply(msg) {
     content: msg.content
   };
 
-  replyUser.textContent = msg.from;
+  replyUser.textContent = msg.from === currentUser ? "Me" : msg.from;
   replyText.textContent = msg.content;
   replyBar.style.display = "flex";
 }
@@ -144,9 +130,12 @@ function addMessage(msg) {
 
   let replyHtml = "";
   if (msg.replyTo) {
+    const displayName =
+      msg.replyTo.user === currentUser ? "Me" : msg.replyTo.user;
+
     replyHtml = `
       <div class="reply-preview">
-        <strong>${msg.replyTo.user}</strong><br>
+        <strong>${displayName}</strong><br>
         ${msg.replyTo.content}
       </div>
     `;
