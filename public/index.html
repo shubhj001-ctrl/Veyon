@@ -1,80 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>VibeChat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>Private Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
 <!-- AUTH SCREEN -->
-<div class="screen active" id="auth-screen">
-  <div class="glass-card pop">
-    <h1 id="auth-title">Welcome back 👋</h1>
-    <p id="auth-sub">Login to continue</p>
-
-    <input id="auth-user" placeholder="username" />
-    <input id="auth-pass" type="password" placeholder="password" />
-
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-card">
+    <h2>Welcome back</h2>
+    <input id="auth-user" placeholder="Username" />
+    <input id="auth-pass" type="password" placeholder="Password" />
     <button id="primary-btn">Login</button>
-    <button id="switch-btn" class="secondary">We appreciate your interest in Signup, but we are in a building stage and cannot provide any access at this time.</button>
-
     <p id="auth-msg"></p>
   </div>
 </div>
 
 <!-- CHAT SCREEN -->
-<div class="screen" id="chat-screen">
-  <div class="top-info">
-    <span id="online-count">🟢 0 online</span>
-  </div>
-<div class="sidebar">
-  <h3>Chats</h3>
-  <ul id="user-list"></ul>
+<div id="chat-screen" class="chat-screen">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h3>Chats</h3>
+    <ul id="user-list"></ul>
+  </aside>
+
+  <!-- MAIN CHAT -->
+  <main class="chat-main">
+
+    <!-- HEADER -->
+    <header class="chat-header">
+      <span id="chat-header">Select a chat</span>
+      <span id="online-count">🟢 0 online</span>
+    </header>
+
+    <!-- MESSAGES -->
+    <section id="chat-box" class="chat-box"></section>
+
+    <!-- REPLY BAR -->
+    <div id="reply-bar" class="reply-bar" style="display:none">
+      <span><strong id="reply-user"></strong>: <span id="reply-text"></span></span>
+      <button id="cancel-reply">✖</button>
+    </div>
+
+    <!-- INPUT -->
+    <form id="chat-form" class="chat-input">
+      <label class="attach">
+        📎
+        <input type="file" id="file-input" hidden />
+      </label>
+      <input id="message" placeholder="Type something…" />
+      <button type="submit">⚡</button>
+    </form>
+
+  </main>
 </div>
-
-<div class="chat-area">
-  <div id="chat-header"></div>
-  <div id="chat-box"></div>
-
-  <form id="chat-form">
-    <input id="message" placeholder="Type message..." />
-    <button type="submit">Send</button>
-  </form>
-</div>
-
-  <div id="chat-box"></div>
-  <div id="typing"></div>
-
-  <form id="chat-form" class="input-bar">
-    <button type="button" class="attach" onclick="document.getElementById('file-input').click()">📎</button>
-    <input id="file-input" type="file" accept="image/*,video/*" hidden />
-    <input id="message" placeholder="Type something…" autocomplete="off" />
-    <button type="submit">⚡</button>
-  </form>
-</div>
-<div class="status-wrapper">
-  <span id="connection-badge" class="badge hidden">Reconnecting…</span>
-
-  <div class="user-status">
-    <span id="status-dot" class="dot offline"></span>
-    <span id="status-text">Offline</span>
-  </div>
-</div>
-
-<div id="reply-bar" style="display:none">
-  Replying to <strong id="reply-user"></strong>:
-  <span id="reply-text"></span>
-  <button id="cancel-reply">✖</button>
-</div>
-<div id="reply-bar" class="reply-bar" style="display:none">
-  <div class="reply-info">
-    <strong id="reply-user"></strong>
-    <span id="reply-text"></span>
-  </div>
-  <button id="cancel-reply">✖</button>
-</div>
-
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>
