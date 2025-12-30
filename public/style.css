@@ -20,18 +20,9 @@ body {
   gap: 10px;
 }
 
-#login-view input {
-  padding: 8px;
-  width: 200px;
-}
-
-#login-view button {
-  padding: 8px 16px;
-}
-
 /* APP */
 #app-view {
-  display: none;
+  display: flex;
   height: 100vh;
 }
 
@@ -78,26 +69,43 @@ header {
   overflow-y: auto;
 }
 
-.msg {
-  margin-bottom: 8px;
+/* MESSAGE + TIMESTAMP */
+.msg-wrapper {
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
-.msg.me {
-  text-align: right;
+.msg-wrapper.me {
+  align-items: flex-end;
 }
 
+.msg-bubble {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.15);
+  max-width: 70%;
+}
+
+.msg-wrapper.me .msg-bubble {
+  background: #4a5cff;
+}
+
+.msg-time {
+  font-size: 11px;
+  opacity: 0.6;
+  margin-top: 2px;
+}
+
+/* FOOTER */
 footer {
   padding: 10px;
   display: flex;
   gap: 10px;
 }
 
-footer input {
-  flex: 1;
-  padding: 8px;
-}
-
-/* STATUS + BADGE */
+/* STATUS */
 .status-dot {
   width: 8px;
   height: 8px;
@@ -107,9 +115,4 @@ footer input {
 
 .status-dot.online {
   background: #2ecc71;
-}
-
-.badge {
-  margin-left: auto;
-  color: red;
 }

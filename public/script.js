@@ -13,7 +13,7 @@ const messageInput = document.getElementById("message-input");
 const sendBtn = document.getElementById("send-btn");
 
 /* ---------------------------
-   INITIAL STATE
+   INITIAL STATE GATE
 ---------------------------- */
 loginView.style.display = "none";
 appView.style.display = "none";
@@ -110,7 +110,7 @@ function openChat(user) {
 }
 
 /* ---------------------------
-   SEND MESSAGE (FIXED UX)
+   SEND MESSAGE
 ---------------------------- */
 sendBtn.onclick = sendMessage;
 messageInput.onkeydown = e => {
@@ -121,7 +121,6 @@ function sendMessage() {
   const text = messageInput.value.trim();
   if (!text || !currentChat) return;
 
-  // ✅ Clear input immediately (UX fix)
   messageInput.value = "";
 
   const msg = {
@@ -153,14 +152,31 @@ socket.on("message", msg => {
 });
 
 /* ---------------------------
-   RENDER MESSAGE
+   RENDER MESSAGE (WITH TIMESTAMP)
 ---------------------------- */
 function renderMessage(msg) {
-  const div = document.createElement("div");
-  div.className = msg.from === currentUser ? "msg me" : "msg";
-  div.innerText = msg.text;
-  chatBox.appendChild(div);
+  const wrapper = document.createElement("div");
+  wrapper.className =
+    msg.from === currentUser ? "msg-wrapper me" : "msg-wrapper";
+
+  const bubble = document.createElement("div");
+  bubble.className = "msg-bubble";
+  bubble.innerText = msg.text;
+
+  const time = document.createElement("div");
+  time.className = "msg-time";
+  time.innerText = formatTime(msg.time);
+
+  wrapper.appendChild(bubble);
+  wrapper.appendChild(time);
+  chatBox.appendChild(wrapper);
+
   chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function formatTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
 /* ---------------------------
