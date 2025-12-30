@@ -74,7 +74,11 @@ function renderUsers(users) {
   users.forEach(u => {
     const li = document.createElement("li");
     li.dataset.user = u;
-    li.innerText = u;
+
+    const name = document.createElement("span");
+    name.innerText = u;
+
+    li.appendChild(name);
     li.onclick = () => openChat(u);
     userList.appendChild(li);
   });
@@ -95,31 +99,22 @@ function updateStatusDot() {
     statusDot.classList.remove("online");
     return;
   }
+
   onlineUsers.has(currentChat)
     ? statusDot.classList.add("online")
     : statusDot.classList.remove("online");
 }
 
-/* MOBILE BACK */
-backBtn.onclick = () => {
-  appView.classList.remove("mobile-chat-open");
-  currentChat = null;
-  chatTitle.innerText = "Select a chat";
-  statusDot.classList.remove("online");
-  appView.classList.remove("chat-active");
-
-};
-
-/* CHAT */
+/* CHAT OPEN */
 function openChat(user) {
   currentChat = user;
   chatTitle.innerText = user;
   chatBox.innerHTML = "";
   clearReply();
   updateStatusDot();
-appView.classList.add("chat-active");
-appView.classList.add("chat-active");
 
+  // 🔒 HARD STATE SWITCH
+  appView.classList.add("chat-active");
 
   if (window.innerWidth <= 768) {
     appView.classList.add("mobile-chat-open");
@@ -130,8 +125,21 @@ appView.classList.add("chat-active");
   });
 }
 
+/* MOBILE BACK */
+backBtn.onclick = () => {
+  appView.classList.remove("mobile-chat-open");
+  appView.classList.remove("chat-active");
+
+  currentChat = null;
+  chatTitle.innerText = "Select a chat";
+  statusDot.classList.remove("online");
+  chatBox.innerHTML = "";
+  clearReply();
+};
+
 /* SEND */
 sendBtn.onclick = sendMessage;
+
 messageInput.addEventListener("keydown", e => {
   if (e.key === "Enter") sendMessage();
 });
@@ -151,6 +159,7 @@ function sendMessage() {
 
   messageInput.value = "";
   clearReply();
+
   socket.emit("sendMessage", msg);
 }
 
@@ -182,7 +191,11 @@ function renderMessage(msg) {
       ": " +
       msg.replyTo.text;
 
-    r.onclick = () => jumpToMessage(msg.replyTo.id);
+    r.onclick = e => {
+      e.stopPropagation();
+      jumpToMessage(msg.replyTo.id);
+    };
+
     bubble.appendChild(r);
   }
 
@@ -210,7 +223,7 @@ function renderMessage(msg) {
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-/* JUMP TO ORIGINAL */
+/* JUMP TO ORIGINAL MESSAGE */
 function jumpToMessage(id) {
   const target = document.querySelector(`[data-msg-id="${id}"]`);
   if (!target) return;
@@ -228,10 +241,9 @@ function setReply(msg) {
   replyText.innerText = msg.text;
   replyPreview.classList.remove("hidden");
 
-  // 🔥 UX enhancement: focus input immediately
+  // 🔥 UX enhancement
   messageInput.focus();
 }
-
 
 cancelReply.onclick = clearReply;
 
