@@ -30,16 +30,18 @@
 
     <div id="chat-box"></div>
 
-    <!-- REPLY PREVIEW -->
-    <div id="reply-preview" class="reply-preview hidden">
-      <span id="reply-user"></span>
-      <span id="reply-text"></span>
-      <button id="cancel-reply">×</button>
-    </div>
-
     <footer>
-      <input id="message-input" placeholder="Type something...">
-      <button id="send-btn">Send</button>
+      <!-- REPLY PREVIEW (NOW SAFE) -->
+      <div id="reply-preview" class="reply-preview hidden">
+        <span id="reply-user"></span>
+        <span id="reply-text"></span>
+        <button id="cancel-reply">×</button>
+      </div>
+
+      <div class="input-row">
+        <input id="message-input" placeholder="Type something...">
+        <button id="send-btn">Send</button>
+      </div>
     </footer>
   </main>
 </div>

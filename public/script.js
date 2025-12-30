@@ -2,7 +2,6 @@ const socket = io();
 
 let currentUser = localStorage.getItem("user");
 let currentChat = null;
-let onlineSet = new Set();
 let replyTo = null;
 
 /* ELEMENTS */
@@ -19,7 +18,7 @@ const replyUser = document.getElementById("reply-user");
 const replyText = document.getElementById("reply-text");
 const cancelReply = document.getElementById("cancel-reply");
 
-/* INITIAL STATE */
+/* INIT */
 loginView.style.display = "none";
 appView.style.display = "none";
 
@@ -56,7 +55,7 @@ function renderUsers(users) {
   userList.innerHTML = "";
   users.forEach(u => {
     const li = document.createElement("li");
-    li.innerHTML = `<span class="status-dot" data-user="${u}"></span><span>${u}</span>`;
+    li.innerHTML = `<span>${u}</span>`;
     li.onclick = () => openChat(u);
     userList.appendChild(li);
   });
@@ -75,7 +74,9 @@ function openChat(user) {
 
 /* SEND */
 sendBtn.onclick = sendMessage;
-messageInput.onkeydown = e => e.key === "Enter" && sendMessage();
+messageInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") sendMessage();
+});
 
 function sendMessage() {
   const text = messageInput.value.trim();
@@ -95,7 +96,7 @@ function sendMessage() {
   socket.emit("sendMessage", msg, () => renderMessage(msg));
 }
 
-/* RENDER MESSAGE */
+/* RENDER */
 function renderMessage(msg) {
   const wrap = document.createElement("div");
   wrap.className = msg.from === currentUser ? "msg-wrapper me" : "msg-wrapper";
@@ -113,31 +114,14 @@ function renderMessage(msg) {
     bubble.appendChild(r);
   }
 
-  const text = document.createElement("div");
-  text.innerText = msg.text;
-  bubble.appendChild(text);
-
-  const time = document.createElement("div");
-  time.className = "msg-time";
-  time.innerText = new Date(msg.time).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit"
-  });
-
-  const replyBtn = document.createElement("div");
-  replyBtn.className = "reply-btn";
-  replyBtn.innerText = "↩";
-  replyBtn.onclick = () => setReply(msg);
-
-  wrap.appendChild(replyBtn);
+  bubble.appendChild(document.createTextNode(msg.text));
   wrap.appendChild(bubble);
-  wrap.appendChild(time);
 
   chatBox.appendChild(wrap);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-/* REPLY HANDLING */
+/* REPLY */
 function setReply(msg) {
   replyTo = { user: msg.from, text: msg.text };
   replyUser.innerText = msg.from === currentUser ? "Me" : msg.from;
@@ -152,14 +136,7 @@ function clearReply() {
   replyPreview.classList.add("hidden");
 }
 
-/* PRESENCE */
-socket.on("presence", users => {
-  onlineSet = new Set(users);
-  document.querySelectorAll(".status-dot").forEach(dot => {
-    dot.classList.toggle("online", onlineSet.has(dot.dataset.user));
-  });
-});
-
+/* LOGOUT */
 function logout() {
   localStorage.removeItem("user");
   location.reload();
