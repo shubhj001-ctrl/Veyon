@@ -252,3 +252,8 @@ footer {
     transform: translateY(0);
   }
 }
+.highlight .msg-bubble {
+  box-shadow: 0 0 0 2px #E2CEB1;
+  transition: box-shadow 0.3s ease;
+}
+
