@@ -222,7 +222,11 @@ function setReply(msg) {
   replyUser.innerText = msg.user === currentUser ? "Me" : msg.user;
   replyText.innerText = msg.text;
   replyPreview.classList.remove("hidden");
+
+  // 🔥 UX enhancement: focus input immediately
+  messageInput.focus();
 }
+
 
 cancelReply.onclick = clearReply;
 
