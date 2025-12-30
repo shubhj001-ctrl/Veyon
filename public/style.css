@@ -258,15 +258,18 @@ footer {
 }
 
 /* 🖤 WELCOME SCREEN */
+/* 🖤 WELCOME SCREEN (EMPTY STATE) */
 #welcome-screen {
-  flex: 1;
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
 
-  pointer-events: none; /* no accidental clicks */
+  background: #000;
+  z-index: 1;
 }
 
 .welcome-logo {
@@ -276,7 +279,6 @@ footer {
   color: #E2CEB1;
 
   transition: transform 0.35s ease;
-  pointer-events: auto;
 }
 
 .welcome-logo:hover {
@@ -284,14 +286,14 @@ footer {
 }
 
 .welcome-tagline {
-  margin-top: 12px;
+  margin-top: 14px;
   font-size: 14px;
   letter-spacing: 0.6px;
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
-/* Hide welcome screen when chat is open */
-#app-view.mobile-chat-open #welcome-screen {
+/* Hide welcome screen once chat is selected */
+#app-view.chat-active #welcome-screen {
   display: none;
 }
 

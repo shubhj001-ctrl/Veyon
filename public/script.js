@@ -106,6 +106,8 @@ backBtn.onclick = () => {
   currentChat = null;
   chatTitle.innerText = "Select a chat";
   statusDot.classList.remove("online");
+  appView.classList.remove("chat-active");
+
 };
 
 /* CHAT */
@@ -115,6 +117,7 @@ function openChat(user) {
   chatBox.innerHTML = "";
   clearReply();
   updateStatusDot();
+appView.classList.add("chat-active");
 
   if (window.innerWidth <= 768) {
     appView.classList.add("mobile-chat-open");
