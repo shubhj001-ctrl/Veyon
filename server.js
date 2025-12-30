@@ -42,12 +42,13 @@ io.on("connection", socket => {
     cb(messages[key] || []);
   });
 
-  socket.on("sendMessage", msg => {
+  socket.on("sendMessage", (msg, cb) => {
     const key = chatKey(msg.from, msg.to);
     if (!messages[key]) messages[key] = [];
     messages[key].push(msg);
 
     io.emit("message", msg);
+    if (typeof cb === "function") cb();
   });
 
   socket.on("disconnect", () => {

@@ -93,8 +93,18 @@ function sendMessage() {
   messageInput.value = "";
   clearReply();
 
-  socket.emit("sendMessage", msg, () => renderMessage(msg));
+  // send to server; rendering is handled when server emits "message"
+  socket.emit("sendMessage", msg);
 }
+
+// render incoming messages (including those sent by this client)
+socket.on("message", msg => {
+  if (!currentChat) return;
+  const relevant =
+    (msg.from === currentChat && msg.to === currentUser) ||
+    (msg.from === currentUser && msg.to === currentChat);
+  if (relevant) renderMessage(msg);
+});
 
 /* RENDER */
 function renderMessage(msg) {
