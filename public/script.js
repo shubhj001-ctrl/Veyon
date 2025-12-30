@@ -4,6 +4,7 @@ let currentUser = localStorage.getItem("user");
 let currentChat = null;
 let replyTo = null;
 let onlineUsers = new Set();
+let presenceReady = false;
 
 /* ELEMENTS */
 const loginView = document.getElementById("login-view");
@@ -26,10 +27,14 @@ appView.style.display = "none";
 
 if (currentUser) {
   appView.style.display = "flex";
-  socket.emit("login", { username: currentUser, password: "jaggibaba" }, res => {
-    if (!res?.ok) logout();
-    else renderUsers(res.users);
-  });
+  socket.emit(
+    "login",
+    { username: currentUser, password: "jaggibaba" },
+    res => {
+      if (!res?.ok) logout();
+      else renderUsers(res.users);
+    }
+  );
 } else {
   loginView.style.display = "flex";
 }
@@ -56,13 +61,16 @@ document.getElementById("login-btn").onclick = () => {
 /* PRESENCE */
 socket.on("presence", users => {
   onlineUsers = new Set(users);
-  updateStatusDot();
+  presenceReady = true;
+
   updateUserListPresence();
+  updateStatusDot();
 });
 
 /* USERS */
 function renderUsers(users) {
   userList.innerHTML = "";
+
   users.forEach(u => {
     const li = document.createElement("li");
     li.dataset.user = u;
@@ -70,10 +78,14 @@ function renderUsers(users) {
     li.onclick = () => openChat(u);
     userList.appendChild(li);
   });
+
+  // IMPORTANT: presence may arrive before or after render
   updateUserListPresence();
 }
 
 function updateUserListPresence() {
+  if (!presenceReady) return;
+
   document.querySelectorAll("#user-list li").forEach(li => {
     const user = li.dataset.user;
     li.style.opacity = onlineUsers.has(user) ? "1" : "0.4";
@@ -81,10 +93,11 @@ function updateUserListPresence() {
 }
 
 function updateStatusDot() {
-  if (!currentChat) {
+  if (!currentChat || !presenceReady) {
     statusDot.classList.remove("online");
     return;
   }
+
   onlineUsers.has(currentChat)
     ? statusDot.classList.add("online")
     : statusDot.classList.remove("online");
@@ -96,6 +109,8 @@ function openChat(user) {
   chatTitle.innerText = user;
   chatBox.innerHTML = "";
   clearReply();
+
+  // status updates safely even if presence arrives later
   updateStatusDot();
 
   socket.emit("loadMessages", { withUser: user }, msgs => {
@@ -168,7 +183,6 @@ function renderMessage(msg) {
   });
 
   bubble.appendChild(time);
-
   bubble.onclick = () => setReply(msg);
 
   wrap.appendChild(bubble);
