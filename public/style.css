@@ -69,12 +69,13 @@ header {
   overflow-y: auto;
 }
 
-/* MESSAGE + TIMESTAMP */
+/* MESSAGE */
 .msg-wrapper {
-  margin-bottom: 10px;
+  margin-bottom: 14px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  position: relative;
 }
 
 .msg-wrapper.me {
@@ -86,16 +87,63 @@ header {
   border-radius: 10px;
   background: rgba(255,255,255,0.15);
   max-width: 70%;
+  position: relative;
 }
 
 .msg-wrapper.me .msg-bubble {
   background: #4a5cff;
 }
 
+/* REPLY PREVIEW IN MESSAGE */
+.reply-box {
+  background: rgba(0,0,0,0.3);
+  border-left: 3px solid #4a5cff;
+  padding: 6px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+/* TIMESTAMP */
 .msg-time {
   font-size: 11px;
   opacity: 0.6;
   margin-top: 2px;
+}
+
+/* REPLY BUTTON (HOVER) */
+.reply-btn {
+  position: absolute;
+  top: 0;
+  right: -30px;
+  cursor: pointer;
+  opacity: 0;
+  font-size: 12px;
+}
+
+.msg-wrapper:hover .reply-btn {
+  opacity: 0.6;
+}
+
+/* REPLY PREVIEW BAR */
+.reply-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: rgba(0,0,0,0.4);
+  font-size: 13px;
+}
+
+.reply-preview.hidden {
+  display: none;
+}
+
+.reply-preview button {
+  background: none;
+  color: white;
+  border: none;
+  cursor: pointer;
 }
 
 /* FOOTER */
@@ -103,6 +151,11 @@ footer {
   padding: 10px;
   display: flex;
   gap: 10px;
+}
+
+footer input {
+  flex: 1;
+  padding: 8px;
 }
 
 /* STATUS */
