@@ -257,3 +257,41 @@ footer {
   transition: box-shadow 0.3s ease;
 }
 
+/* 🖤 WELCOME SCREEN */
+#welcome-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+
+  pointer-events: none; /* no accidental clicks */
+}
+
+.welcome-logo {
+  font-size: clamp(72px, 18vw, 180px);
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: #E2CEB1;
+
+  transition: transform 0.35s ease;
+  pointer-events: auto;
+}
+
+.welcome-logo:hover {
+  transform: translateY(-12px);
+}
+
+.welcome-tagline {
+  margin-top: 12px;
+  font-size: 14px;
+  letter-spacing: 0.6px;
+  opacity: 0.7;
+}
+
+/* Hide welcome screen when chat is open */
+#app-view.mobile-chat-open #welcome-screen {
+  display: none;
+}
+
