@@ -16,7 +16,7 @@ const statusDot = document.getElementById("chat-status-dot");
 const messageInput = document.getElementById("message-input");
 const sendBtn = document.getElementById("send-btn");
 const backBtn = document.getElementById("mobile-back-btn");
-
+const welcomeScreen = document.getElementById("welcome-screen");
 const replyPreview = document.getElementById("reply-preview");
 const replyUser = document.getElementById("reply-user");
 const replyText = document.getElementById("reply-text");
@@ -115,6 +115,7 @@ function openChat(user) {
 
   // 🔒 HARD STATE SWITCH
   appView.classList.add("chat-active");
+   welcomeScreen.classList.add("hidden");
 
   if (window.innerWidth <= 768) {
     appView.classList.add("mobile-chat-open");
@@ -135,6 +136,8 @@ backBtn.onclick = () => {
   statusDot.classList.remove("online");
   chatBox.innerHTML = "";
   clearReply();
+   // 🔥 RESTORE WELCOME SCREEN
+  welcomeScreen.classList.remove("hidden");
 };
 
 /* SEND */

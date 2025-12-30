@@ -253,13 +253,35 @@ footer {
 
 /* MOBILE */
 @media (max-width: 768px) {
+
+  /* Skip welcome screen on mobile */
+  #welcome-screen {
+    display: none !important;
+  }
+
+  aside {
+    width: 100%;
+    border-right: none;
+  }
+
+  aside ul {
+    gap: 12px;
+  }
+
+  aside li {
+    padding: 16px;
+    border-radius: 14px;
+    background: rgba(226, 206, 177, 0.08);
+  }
+
+  aside li:hover {
+    transform: none;
+  }
+
   #app-view.mobile-chat-open aside {
     display: none;
   }
 
-  #mobile-back-btn {
-    display: inline;
-  }
 }
 
 /* ✨ ANIMATIONS */
@@ -292,6 +314,7 @@ footer {
 /* 🖤 WELCOME SCREEN */
 /* 🖤 WELCOME SCREEN (EMPTY STATE) */
 /* 🖤 WELCOME SCREEN (EMPTY CHAT STATE) */
+/* WELCOME SCREEN – EMPTY CHAT STATE */
 #welcome-screen {
   position: absolute;
   inset: 0;
@@ -303,8 +326,12 @@ footer {
   text-align: center;
 
   background: #000;
-  z-index: 0; /* behind header */
-  pointer-events: none;
+  z-index: 0;
+}
+
+/* 🔒 HARD HIDE (no layering, no overlap) */
+#welcome-screen.hidden {
+  display: none !important;
 }
 
 .welcome-logo {
