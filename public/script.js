@@ -6,6 +6,17 @@ const loadingLogo = document.getElementById("loading-logo");
 const loadingWord = document.getElementById("loading-word");
 const typingBubble = document.getElementById("typing-bubble");
 
+let replyTarget = null;
+
+const replyPreview = document.getElementById("reply-preview");
+const replyUser = document.getElementById("reply-user");
+const replyText = document.getElementById("reply-text");
+const cancelReplyBtn = document.getElementById("cancel-reply");
+
+cancelReplyBtn.onclick = () => {
+  replyTarget = null;
+  replyPreview.classList.add("hidden");
+};
 
 
 const brand = "Veyon";
@@ -221,15 +232,28 @@ function sendMessage() {
   const text = input.value.trim();
   if (!text) return;
 
-  socket.emit("sendMessage", {
+  const msg = {
+    id: "msg_" + Date.now(),
     from: currentUser,
     to: currentChat,
     text,
-    time: Date.now()
-  });
+    time: Date.now(),
+    replyTo: replyTarget
+      ? {
+          id: replyTarget.id,
+          text: replyTarget.text,
+          from: replyTarget.from
+        }
+      : null
+  };
 
+  socket.emit("sendMessage", msg);
+
+  replyTarget = null;
+  replyPreview.classList.add("hidden");
   input.value = "";
 }
+
 
 /* RECEIVE MESSAGE */
 socket.on("message", msg => {
@@ -261,34 +285,38 @@ socket.on("message", msg => {
 function renderMessage(msg) {
   const div = document.createElement("div");
   div.className = "message" + (msg.from === currentUser ? " me" : "");
-  div.innerText = msg.text;
+  div.dataset.id = msg.id;
+
+  // Reply preview inside message
+  if (msg.replyTo) {
+    const replyBox = document.createElement("div");
+    replyBox.className = "reply-inside";
+    replyBox.innerHTML = `
+      <strong>${msg.replyTo.from}</strong>
+      <span>${msg.replyTo.text}</span>
+    `;
+
+    replyBox.onclick = () => jumpToMessage(msg.replyTo.id);
+    div.appendChild(replyBox);
+  }
+
+  const text = document.createElement("div");
+  text.textContent = msg.text;
+  div.appendChild(text);
+
+  // Click to reply
+  div.onclick = () => {
+    replyTarget = msg;
+    replyUser.textContent = msg.from;
+    replyText.textContent = msg.text;
+    replyPreview.classList.remove("hidden");
+    input.focus();
+  };
 
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-let typingTimeout;
-
-input.addEventListener("input", () => {
-  if (!currentChat) return;
-
-  socket.emit("typing", { to: currentChat });
-
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {
-    socket.emit("stopTyping", { to: currentChat });
-  }, 1200);
-});
-socket.on("typing", data => {
-  if (!currentChat || !currentUser) return;
-
-  if (data.from === currentChat && data.to === currentUser) {
-    typingBubble.classList.remove("hidden");
-    typingBubble.classList.add("show");
-
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
-});
 
 socket.on("stopTyping", data => {
   if (!currentChat || !currentUser) return;
@@ -300,4 +328,14 @@ socket.on("stopTyping", data => {
     }, 250);
   }
 });
+
+function jumpToMessage(id) {
+  const el = document.querySelector(`[data-id="${id}"]`);
+  if (!el) return;
+
+  el.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  el.classList.add("highlight");
+  setTimeout(() => el.classList.remove("highlight"), 1200);
+}
 
