@@ -51,14 +51,21 @@
 
   <main class="chat-area">
     <header class="chat-header">
-      <div id="typing-indicator" class="typing hidden">
-  typing<span class="dots"></span>
-</div>
 
       <span id="chat-title">Select a chat</span>
     </header>
 
     <div class="chat-messages" id="chat-box"></div>
+    <div id="chat-box">
+  <!-- messages -->
+
+  <div id="typing-bubble" class="typing-bubble hidden">
+    <span class="dot"></span>
+    <span class="dot"></span>
+    <span class="dot"></span>
+  </div>
+</div>
+
 
     <footer class="chat-input">
       <input id="message-input" placeholder="Type a message">

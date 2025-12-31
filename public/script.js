@@ -4,7 +4,8 @@ const socket = io();
 const loadingScreen = document.getElementById("loading-screen");
 const loadingLogo = document.getElementById("loading-logo");
 const loadingWord = document.getElementById("loading-word");
-const typingIndicator = document.getElementById("typing-indicator");
+const typingBubble = document.getElementById("typing-bubble");
+
 
 
 const brand = "Veyon";
@@ -168,7 +169,8 @@ function openChat(user) {
   chatTitle.innerText = user;
   localStorage.setItem("veyon_last_chat", user);
   chatBox.innerHTML = "";
-
+  typingBubble.classList.add("hidden");
+typingBubble.classList.remove("show");
   socket.emit("loadMessages", { withUser: user }, msgs => {
     msgs.forEach(renderMessage);
   });
@@ -229,13 +231,24 @@ input.addEventListener("input", () => {
   }, 1200);
 });
 socket.on("typing", data => {
+  if (!currentChat || !currentUser) return;
+
   if (data.from === currentChat && data.to === currentUser) {
-    typingIndicator.classList.remove("hidden");
+    typingBubble.classList.remove("hidden");
+    typingBubble.classList.add("show");
+
+    chatBox.scrollTop = chatBox.scrollHeight;
   }
 });
 
 socket.on("stopTyping", data => {
+  if (!currentChat || !currentUser) return;
+
   if (data.from === currentChat && data.to === currentUser) {
-    typingIndicator.classList.add("hidden");
+    typingBubble.classList.remove("show");
+    setTimeout(() => {
+      typingBubble.classList.add("hidden");
+    }, 250);
   }
 });
+
