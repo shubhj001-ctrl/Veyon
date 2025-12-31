@@ -1,6 +1,7 @@
 const socket = io();
 
 /* ===== LOADING SCREEN ===== */
+document.addEventListener("DOMContentLoaded", () => {
 const loadingScreen = document.getElementById("loading-screen");
 const loadingLogo = document.getElementById("loading-logo");
 const loadingWord = document.getElementById("loading-word");
@@ -361,3 +362,29 @@ function hideLoader() {
   loader.classList.add("hidden");
   appView.classList.remove("hidden");
 }
+
+// ⏳ Always exit loader after max 3 seconds
+setTimeout(() => {
+  hideLoader();
+}, 3000);
+
+attemptLogin(user, pass, () => {
+  hideLoader();
+});
+setTimeout(() => {
+  const loader = document.getElementById("app-loader");
+  const appView = document.getElementById("app-view");
+
+  if (loader) loader.classList.add("hidden");
+  if (appView) appView.classList.remove("hidden");
+}, 2500);
+
+});
+const emptyChat = document.getElementById("empty-chat");
+const chatBox = document.getElementById("chat-box");
+const chatFooter = document.getElementById("chat-footer");
+
+if (emptyChat) emptyChat.classList.remove("hidden");
+if (chatBox) chatBox.classList.add("hidden");
+if (chatFooter) chatFooter.classList.add("hidden");
+
