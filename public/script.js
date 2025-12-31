@@ -1,35 +1,55 @@
 const socket = io();
 
-/* ELEMENTS */
+/* LOGIN ELEMENTS */
 const loginScreen = document.getElementById("login-screen");
-const app = document.getElementById("app");
-const loginButtons = document.querySelectorAll(".login-box button");
-const logoutBtn = document.getElementById("logout-btn");
+const loginBtn = document.getElementById("login-btn");
+const loginError = document.getElementById("login-error");
+const usernameInput = document.getElementById("login-username");
+const passwordInput = document.getElementById("login-password");
 
+/* APP ELEMENTS */
+const app = document.getElementById("app");
+const logoutBtn = document.getElementById("logout-btn");
 const userList = document.getElementById("user-list");
 const chatBox = document.getElementById("chat-box");
 const chatTitle = document.getElementById("chat-title");
 const input = document.getElementById("message-input");
 const sendBtn = document.getElementById("send-btn");
 
-/* STATE */
 let currentUser = localStorage.getItem("veyon_user");
 let currentChat = null;
 
-/* LOGIN FLOW */
-if (!currentUser) {
-  loginScreen.classList.remove("hidden");
-} else {
-  startApp();
+/* AUTO LOGIN IF STORED */
+if (currentUser) {
+  startApp(currentUser);
 }
 
-loginButtons.forEach(btn => {
-  btn.onclick = () => {
-    currentUser = btn.dataset.user;
-    localStorage.setItem("veyon_user", currentUser);
-    startApp();
-  };
-});
+/* LOGIN */
+loginBtn.onclick = () => {
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value.trim();
+
+  socket.emit("login", { username, password }, res => {
+    if (!res.ok) {
+      loginError.classList.remove("hidden");
+      return;
+    }
+
+    localStorage.setItem("veyon_user", username);
+    startApp(username, res.users);
+  });
+};
+
+/* START APP */
+function startApp(username, users = []) {
+  currentUser = username;
+  loginScreen.classList.add("hidden");
+  app.classList.remove("hidden");
+
+  renderUsers(users);
+
+  socket.emit("login", { username, password: "" }, () => {});
+}
 
 /* LOGOUT */
 logoutBtn.onclick = () => {
@@ -37,18 +57,9 @@ logoutBtn.onclick = () => {
   location.reload();
 };
 
-/* START APP */
-function startApp() {
-  loginScreen.classList.add("hidden");
-  app.classList.remove("hidden");
-
-  socket.emit("login", currentUser);
-}
-
-/* USERS LIST */
-socket.on("users", users => {
+/* USERS */
+function renderUsers(users) {
   userList.innerHTML = "";
-
   users.forEach(u => {
     const div = document.createElement("div");
     div.className = "user-card";
@@ -56,7 +67,7 @@ socket.on("users", users => {
     div.onclick = () => openChat(u);
     userList.appendChild(div);
   });
-});
+}
 
 /* OPEN CHAT */
 function openChat(user) {
@@ -69,7 +80,7 @@ function openChat(user) {
   });
 }
 
-/* SEND MESSAGE */
+/* SEND */
 sendBtn.onclick = sendMessage;
 input.addEventListener("keydown", e => {
   if (e.key === "Enter") sendMessage();
@@ -81,18 +92,17 @@ function sendMessage() {
   const text = input.value.trim();
   if (!text) return;
 
-  const msg = {
+  socket.emit("sendMessage", {
     from: currentUser,
     to: currentChat,
     text,
     time: Date.now()
-  };
+  });
 
-  socket.emit("sendMessage", msg);
   input.value = "";
 }
 
-/* RECEIVE MESSAGE */
+/* RECEIVE */
 socket.on("message", msg => {
   if (
     (msg.from === currentChat && msg.to === currentUser) ||
@@ -102,7 +112,7 @@ socket.on("message", msg => {
   }
 });
 
-/* RENDER MESSAGE */
+/* RENDER */
 function renderMessage(msg) {
   const div = document.createElement("div");
   div.className = "message" + (msg.from === currentUser ? " me" : "");
