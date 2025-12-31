@@ -225,12 +225,14 @@ socket.on("message", msg => {
       Object.keys(unreadCounts)
         .concat(currentChat ? [currentChat] : [])
         .filter((v, i, a) => a.indexOf(v) === i)
-        renderUsers(
+        
+    );
+    renderUsers(
   Object.keys(unreadCounts)
     .concat([user])
     .filter((v, i, a) => a.indexOf(v) === i)
 );
-    );
+
   }
 
   if (
