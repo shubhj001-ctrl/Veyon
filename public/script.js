@@ -9,7 +9,7 @@ const sendBtn = document.getElementById("send-btn");
 let currentUser = "shubh"; // temp
 let currentChat = null;
 
-// Fake users for layout testing
+/* TEMP USERS FOR UI */
 ["boss", "weed", "alex", "sam"].forEach(u => {
   const div = document.createElement("div");
   div.className = "user-card";
@@ -24,14 +24,22 @@ function openChat(user) {
   chatBox.innerHTML = "";
 }
 
-sendBtn.onclick = () => {
-  if (!input.value) return;
+/* SEND MESSAGE WITH ANIMATION FEEL */
+sendBtn.onclick = sendMessage;
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter") sendMessage();
+});
+
+function sendMessage() {
+  const text = input.value.trim();
+  if (!text || !currentChat) return;
 
   const msg = document.createElement("div");
   msg.className = "message me";
-  msg.innerText = input.value;
+  msg.innerText = text;
 
   chatBox.appendChild(msg);
   chatBox.scrollTop = chatBox.scrollHeight;
+
   input.value = "";
-};
+}
