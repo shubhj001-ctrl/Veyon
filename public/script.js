@@ -1,5 +1,29 @@
 const socket = io();
 
+/* ===== LOADING ANIMATION ===== */
+const loadingScreen = document.getElementById("loading-screen");
+const loadingLogo = document.getElementById("loading-logo");
+const loadingWord = document.getElementById("loading-word");
+
+const brand = "Veyon";
+let index = 0;
+
+const typeInterval = setInterval(() => {
+  loadingLogo.textContent = brand.slice(0, index + 1);
+  loadingWord.textContent = brand.slice(0, index + 1);
+  index = (index + 1) % brand.length;
+}, 180);
+
+/* Hide loading when ready */
+function hideLoading() {
+  clearInterval(typeInterval);
+  loadingScreen.classList.add("fade-out");
+  setTimeout(() => {
+    loadingScreen.style.display = "none";
+  }, 600);
+}
+
+
 /* LOGIN ELEMENTS */
 const loginScreen = document.getElementById("login-screen");
 const loginBtn = document.getElementById("login-btn");
@@ -26,6 +50,11 @@ const savedPass = localStorage.getItem("veyon_pass");
 
 if (savedUser && savedPass) {
   attemptLogin(savedUser, savedPass, true);
+} else {
+  setTimeout(() => {
+    hideLoading();
+    loginScreen.classList.remove("hidden");
+  }, 800);
 }
 
 /* LOGIN CLICK */
