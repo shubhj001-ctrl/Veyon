@@ -10,6 +10,10 @@ const typingBubble = document.getElementById("typing-bubble");
 
 const brand = "Veyon";
 let charIndex = 0;
+let unreadCounts = JSON.parse(
+  localStorage.getItem("veyon_unread") || "{}"
+);
+
 
 /* Smooth letter-by-letter typing */
 function startTyping() {
@@ -146,25 +150,35 @@ logoutBtn.onclick = () => {
 function renderUsers(users) {
   userList.innerHTML = "";
 
-  if (!users || users.length === 0) {
-    userList.innerHTML = `
-      <div style="opacity:.6;padding:14px">
-        No users available
-      </div>`;
-    return;
-  }
-
   users.forEach(u => {
     const div = document.createElement("div");
     div.className = "user-card";
-    div.innerText = u;
+
+    const name = document.createElement("span");
+    name.textContent = u;
+
+    const badge = document.createElement("span");
+    badge.className = "unread-badge";
+
+    if (unreadCounts[u]) {
+      badge.textContent = unreadCounts[u];
+      badge.classList.add("show");
+    }
+
+    div.appendChild(name);
+    div.appendChild(badge);
+
     div.onclick = () => openChat(u);
+
     userList.appendChild(div);
   });
 }
 
 /* OPEN CHAT */
 function openChat(user) {
+  unreadCounts[user] = 0;
+delete unreadCounts[user];
+localStorage.setItem("veyon_unread", JSON.stringify(unreadCounts));
   currentChat = user;
   chatTitle.innerText = user;
   localStorage.setItem("veyon_last_chat", user);
@@ -200,6 +214,25 @@ function sendMessage() {
 
 /* RECEIVE MESSAGE */
 socket.on("message", msg => {
+  const isCurrentChat =
+    currentChat === msg.from &&
+    msg.to === currentUser;
+
+  if (!isCurrentChat && msg.to === currentUser) {
+    unreadCounts[msg.from] = (unreadCounts[msg.from] || 0) + 1;
+    localStorage.setItem("veyon_unread", JSON.stringify(unreadCounts));
+    renderUsers(
+      Object.keys(unreadCounts)
+        .concat(currentChat ? [currentChat] : [])
+        .filter((v, i, a) => a.indexOf(v) === i)
+        renderUsers(
+  Object.keys(unreadCounts)
+    .concat([user])
+    .filter((v, i, a) => a.indexOf(v) === i)
+);
+    );
+  }
+
   if (
     (msg.from === currentChat && msg.to === currentUser) ||
     (msg.from === currentUser && msg.to === currentChat)
