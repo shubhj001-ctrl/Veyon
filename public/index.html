@@ -7,35 +7,41 @@
 </head>
 <body>
 
-<div id="app">
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <h2>Select account</h2>
+    <button data-user="shubh">Shubh</button>
+    <button data-user="boss">Boss</button>
+    <button data-user="weed">Weed</button>
+  </div>
+</div>
 
-  <!-- LEFT SIDEBAR -->
+<!-- APP -->
+<div id="app" class="hidden">
+
+  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-header">
       <h2>Veyon</h2>
+      <button id="logout-btn">Logout</button>
     </div>
 
-    <div class="user-list" id="user-list">
-      <!-- users injected here -->
-    </div>
+    <div class="user-list" id="user-list"></div>
   </aside>
 
-  <!-- RIGHT CHAT AREA -->
+  <!-- CHAT -->
   <main class="chat-area">
-
     <header class="chat-header">
       <span id="chat-title">Select a chat</span>
     </header>
 
-    <div class="chat-messages" id="chat-box">
-      <!-- messages -->
-    </div>
+    <div class="chat-messages" id="chat-box"></div>
 
     <footer class="chat-input">
       <input id="message-input" placeholder="Type a message">
       <button id="send-btn">Send</button>
     </footer>
-
   </main>
 
 </div>

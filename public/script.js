@@ -1,20 +1,51 @@
 const socket = io();
 
 /* ELEMENTS */
+const loginScreen = document.getElementById("login-screen");
+const app = document.getElementById("app");
+const loginButtons = document.querySelectorAll(".login-box button");
+const logoutBtn = document.getElementById("logout-btn");
+
 const userList = document.getElementById("user-list");
 const chatBox = document.getElementById("chat-box");
 const chatTitle = document.getElementById("chat-title");
 const input = document.getElementById("message-input");
 const sendBtn = document.getElementById("send-btn");
 
-/* DEFAULT USER (PUBLIC ACCESS MODE) */
-const currentUser = "shubh"; // 👈 change when needed
+/* STATE */
+let currentUser = localStorage.getItem("veyon_user");
 let currentChat = null;
 
-/* LOGIN */
-socket.emit("login", currentUser);
+/* LOGIN FLOW */
+if (!currentUser) {
+  loginScreen.classList.remove("hidden");
+} else {
+  startApp();
+}
 
-/* USERS LIST (ALWAYS SHOW) */
+loginButtons.forEach(btn => {
+  btn.onclick = () => {
+    currentUser = btn.dataset.user;
+    localStorage.setItem("veyon_user", currentUser);
+    startApp();
+  };
+});
+
+/* LOGOUT */
+logoutBtn.onclick = () => {
+  localStorage.removeItem("veyon_user");
+  location.reload();
+};
+
+/* START APP */
+function startApp() {
+  loginScreen.classList.add("hidden");
+  app.classList.remove("hidden");
+
+  socket.emit("login", currentUser);
+}
+
+/* USERS LIST */
 socket.on("users", users => {
   userList.innerHTML = "";
 
