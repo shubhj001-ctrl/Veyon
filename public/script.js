@@ -35,10 +35,26 @@ document.addEventListener("DOMContentLoaded", () => {
   let unreadCounts = JSON.parse(localStorage.getItem("veyon_unread") || "{}");
 
   /* ========= LOADER ========= */
-  setTimeout(() => {
-    loadingScreen.style.display = "none";
-    loginScreen.classList.remove("hidden");
-  }, 2500);
+  const brand = "Veyon";
+let charIndex = 0;
+const loadingWord = document.getElementById("loading-word");
+
+function startTyping() {
+  charIndex = 0;
+  loadingWord.textContent = "";
+
+  const typing = setInterval(() => {
+    if (charIndex < brand.length) {
+      loadingWord.textContent += brand[charIndex];
+      charIndex++;
+    } else {
+      clearInterval(typing);
+    }
+  }, 220);
+}
+
+startTyping();
+
 
   /* ========= LOGIN ========= */
   loginBtn.onclick = () => {
