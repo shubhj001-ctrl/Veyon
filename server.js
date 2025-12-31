@@ -2,7 +2,7 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 
-const USERS = require("./defaultUsers"); // 👈 IMPORTANT
+const USERS = require("./defaultUsers");
 
 const app = express();
 const server = http.createServer(app);
@@ -18,18 +18,35 @@ function chatKey(a, b) {
 }
 
 io.on("connection", socket => {
+  console.log("🔌 New socket connected:", socket.id);
 
-  socket.on("login", username => {
-    if (!USERS[username]) return;
+  socket.on("login", (data, cb) => {
+    console.log("➡️ Login attempt:", data);
 
-    socket.username = username;
-    onlineUsers.add(username);
+    // 🔒 HARD VALIDATION
+    if (
+      !data ||
+      !data.username ||
+      !data.password ||
+      !USERS[data.username] ||
+      USERS[data.username] !== data.password
+    ) {
+      console.log("❌ Login failed for:", data?.username);
+      if (cb) cb({ ok: false });
+      return;
+    }
 
-    // ✅ ALWAYS send full user list except self
-    socket.emit(
-      "users",
-      Object.keys(USERS).filter(u => u !== username)
-    );
+    socket.username = data.username;
+    onlineUsers.add(data.username);
+
+    console.log("✅ Login success:", data.username);
+
+    if (cb) {
+      cb({
+        ok: true,
+        users: Object.keys(USERS).filter(u => u !== data.username)
+      });
+    }
 
     io.emit("online", [...onlineUsers]);
   });
@@ -48,11 +65,13 @@ io.on("connection", socket => {
   });
 
   socket.on("disconnect", () => {
+    console.log("❌ Disconnected:", socket.username);
     onlineUsers.delete(socket.username);
     io.emit("online", [...onlineUsers]);
   });
 });
 
-server.listen(3000, () => {
-  console.log("🚀 Server running on http://localhost:3000");
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log("🚀 Server running on port", PORT);
 });

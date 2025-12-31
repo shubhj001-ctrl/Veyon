@@ -16,34 +16,29 @@ const chatTitle = document.getElementById("chat-title");
 const input = document.getElementById("message-input");
 const sendBtn = document.getElementById("send-btn");
 
-/* STATE */
 let currentUser = null;
 let currentChat = null;
-let socketReady = false;
 
-/* SOCKET READY */
-socket.on("connect", () => {
-  socketReady = true;
-});
-
-/* LOGIN */
-loginBtn.onclick = () => {
-  if (!socketReady) return;
-
+/* LOGIN CLICK */
+loginBtn.addEventListener("click", () => {
   const username = usernameInput.value.trim();
   const password = passwordInput.value.trim();
 
   loginError.classList.add("hidden");
 
   if (!username || !password) {
-    loginError.innerText = "Username and password are required.";
+    loginError.textContent = "Username and password are required.";
     loginError.classList.remove("hidden");
     return;
   }
 
+  console.log("📤 Sending login:", { username, password });
+
   socket.emit("login", { username, password }, res => {
+    console.log("📥 Login response:", res);
+
     if (!res || !res.ok) {
-      loginError.innerText = "You don’t have access to this portal.";
+      loginError.textContent = "You don’t have access to this portal.";
       loginError.classList.remove("hidden");
       return;
     }
@@ -56,7 +51,7 @@ loginBtn.onclick = () => {
 
     renderUsers(res.users);
   });
-};
+});
 
 /* LOGOUT */
 logoutBtn.onclick = () => {
@@ -67,15 +62,6 @@ logoutBtn.onclick = () => {
 /* USERS */
 function renderUsers(users) {
   userList.innerHTML = "";
-
-  if (!users || users.length === 0) {
-    userList.innerHTML = `
-      <div style="opacity:.6;padding:14px">
-        No users available
-      </div>`;
-    return;
-  }
-
   users.forEach(u => {
     const div = document.createElement("div");
     div.className = "user-card";
@@ -96,7 +82,7 @@ function openChat(user) {
   });
 }
 
-/* SEND MESSAGE */
+/* SEND */
 sendBtn.onclick = sendMessage;
 input.addEventListener("keydown", e => {
   if (e.key === "Enter") sendMessage();
@@ -128,12 +114,11 @@ socket.on("message", msg => {
   }
 });
 
-/* RENDER MESSAGE */
+/* RENDER */
 function renderMessage(msg) {
   const div = document.createElement("div");
   div.className = "message" + (msg.from === currentUser ? " me" : "");
   div.innerText = msg.text;
-
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
