@@ -50,40 +50,38 @@
   </aside>
 
   <main class="chat-area">
-    <header class="chat-header">
 
-      <span id="chat-title">Select a chat</span>
-    </header>
-<div id="empty-chat" class="empty-chat">
-  Select a chat to start messaging
-</div>
-    <div class="chat-messages" id="chat-box">
-    
-  <!-- messages -->
+  <header class="chat-header">
+    <span id="chat-title">Select a chat</span>
+  </header>
 
-  <div id="typing-bubble" class="typing-bubble hidden">
-    <span class="dot"></span>
-    <span class="dot"></span>
-    <span class="dot"></span>
+  <div id="empty-chat" class="empty-chat">
+    Select a chat to start messaging
   </div>
-</div>
-    <footer class="chat-input">
-      <div id="chat-footer" class="chat-input">
 
-  <div id="reply-preview" class="reply-preview hidden"></div>
+  <div class="chat-messages" id="chat-box">
+    <div id="typing-bubble" class="typing-bubble hidden">
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </div>
+  </div>
 
-      <div class="input-row">
-    <input id="message-input" placeholder="Type a message" />
+  <footer class="chat-input" id="chat-footer">
+    <div id="reply-preview" class="reply-preview hidden">
+      <div class="reply-line"></div>
+      <div class="reply-content">
+        <span id="reply-user"></span>
+        <span id="reply-text"></span>
+      </div>
+      <button id="cancel-reply">✕</button>
+    </div>
+
+    <input id="message-input" placeholder="Type a message">
     <button id="send-btn">Send</button>
-  </div>
-  <div class="reply-line"></div>
-  <div class="reply-content">
-    <span id="reply-user"></span>
-    <span id="reply-text"></span> 
-  </div>
-  <button id="cancel-reply">✕</button>
-    </footer>
-  </main>
+  </footer>
+
+</main>
 
 </div>
 
