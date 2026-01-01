@@ -37,24 +37,32 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ========= LOADER ========= */
   const brand = "Veyon";
 let charIndex = 0;
+let typingInterval = null;
+
 const loadingWord = document.getElementById("loading-word");
 
-function startTyping() {
-  charIndex = 0;
-  loadingWord.textContent = "";
+function startTypingOnce(onComplete) {
+  // Safety: clear any previous interval
+  if (typingInterval) clearInterval(typingInterval);
 
-  const typing = setInterval(() => {
+  loadingWord.textContent = "";
+  charIndex = 0;
+
+  typingInterval = setInterval(() => {
     if (charIndex < brand.length) {
       loadingWord.textContent += brand[charIndex];
       charIndex++;
     } else {
-      clearInterval(typing);
+      clearInterval(typingInterval);
+      typingInterval = null;
+
+      // small pause feels premium
+      setTimeout(() => {
+        onComplete && onComplete();
+      }, 400);
     }
-  }, 220);
+  }, 200);
 }
-
-startTyping();
-
 
   /* ========= LOGIN ========= */
   loginBtn.onclick = () => {
