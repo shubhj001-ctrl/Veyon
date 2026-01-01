@@ -117,6 +117,8 @@ body {
 
   display: flex;
   gap: 10px;
+  position: relative;
+  z-index: 10;
 }
 
 .chat-input input {
@@ -512,6 +514,9 @@ body {
   justify-content: center;
   color: rgba(202,169,96,0.6);
   font-size: 18px;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
 
 .chat-messages {

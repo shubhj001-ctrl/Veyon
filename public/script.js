@@ -157,8 +157,10 @@ startTypingOnce(() => {
 
   // ✅ focus input after chat opens
   setTimeout(() => {
-    input.focus();
-  }, 0);
+  input.focus();
+  input.click(); // desktop Safari/Chrome fix
+}, 50);
+
 });
 
   }
