@@ -68,6 +68,11 @@ body {
   background: #3b3b3a;
 }
 
+.chat-area {
+  backdrop-filter: none !important;
+}
+
+
 /* HEADER */
 .chat-header {
   padding: 16px;
@@ -96,7 +101,6 @@ body {
   font-size: 14px;
 
   background: rgba(202,169,96,0.14);
-  backdrop-filter: blur(6px);
 
   animation: riseIn 0.35s ease-out;
 }
@@ -163,11 +167,16 @@ body {
 }
 /* STRONGER GLASS FEEL */
 .sidebar,
-.chat-header,
-.chat-input {
+.chat-header {
   background: rgba(47, 47, 46, 0.75);
   backdrop-filter: blur(14px);
 }
+
+.chat-input {
+  background: rgba(47, 47, 46, 0.75);
+  backdrop-filter: none;
+}
+
 
 /* FLOATING MESSAGE */
 .message.floating {
@@ -534,4 +543,25 @@ body {
 }
 .empty-chat {
   pointer-events: none;
+}
+.chat-input input {
+  pointer-events: auto;
+  z-index: 11;
+  position: relative;
+}
+
+.chat-input {
+  position: sticky;
+  bottom: 0;
+  z-index: 9999;
+}
+
+.chat-input * {
+  pointer-events: auto;
+}
+
+#message-input {
+  pointer-events: auto;
+  z-index: 10000;
+  position: relative;
 }
