@@ -517,3 +517,16 @@ body {
 .chat-messages {
   position: relative;
 }
+
+#loading-word::after {
+  content: "|";
+  animation: blink 1s infinite;
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+.empty-chat {
+  pointer-events: none;
+}

@@ -152,9 +152,15 @@ startTypingOnce(() => {
     chatBox.innerHTML = "";
 
     socket.emit("loadMessages", { withUser: user }, msgs => {
-      msgs.forEach(renderMessage);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    });
+  msgs.forEach(renderMessage);
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  // ✅ focus input after chat opens
+  setTimeout(() => {
+    input.focus();
+  }, 0);
+});
+
   }
 
   sendBtn.onclick = sendMessage;
