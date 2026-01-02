@@ -37,6 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let allUsers = [];
   let unreadCounts = JSON.parse(localStorage.getItem("veyon_unread") || "{}");
   let typingTimeout = null;
+  let selectedMedia = null;
 
   /* ========= LOADER ========= */
   const brand = "Veyon";
@@ -134,20 +135,18 @@ const mediaInput = document.getElementById("media-input");
 
 mediaBtn.onclick = () => mediaInput.click();
 
-mediaInput.onchange = async () => {
+mediaInput.addEventListener("change", () => {
   const file = mediaInput.files[0];
-  if (!file || !currentChat) return;
+  if (!file) return;
 
   const isImage = file.type.startsWith("image/");
   const isVideo = file.type.startsWith("video/");
 
-  // ❌ Invalid file
   if (!isImage && !isVideo) {
-    alert("Only images and videos are allowed");
+    alert("Only images and videos allowed");
     return;
   }
 
-  // ❌ Size limits
   if (isImage && file.size > 8 * 1024 * 1024) {
     alert("Image must be under 8MB");
     return;
@@ -157,6 +156,9 @@ mediaInput.onchange = async () => {
     alert("Video must be under 50MB");
     return;
   }
+
+  selectedMedia = file;
+});
 
   const reader = new FileReader();
   reader.onload = () => {
@@ -172,7 +174,7 @@ mediaInput.onchange = async () => {
 
   reader.readAsDataURL(file);
   mediaInput.value = "";
-};
+});
 
 
   /* ========= LOGIN ========= */
@@ -253,64 +255,38 @@ function showEmptyChat() {
 }
 
 
-  function openChat(user) {
+ function openChat(user) {
   currentChat = user;
-
   localStorage.setItem("veyon_last_chat", user);
 
-  const sidebar = document.querySelector(".sidebar");
-  const chatArea = document.querySelector(".chat-area");
-
-  // ✅ MOBILE NAVIGATION
   if (isMobile) {
-    sidebar.style.display = "none";
-    chatArea.style.display = "flex";
-    chatArea.classList.add("active");
+    document.querySelector(".sidebar").style.display = "none";
+    document.querySelector(".chat-area").classList.add("active");
   }
-   chatTitle.textContent = user;
 
+  chatTitle.textContent = user;
   emptyChat.classList.add("hidden");
   chatBox.classList.remove("hidden");
   chatFooter.classList.remove("hidden");
 
-  unreadCounts[user] && delete unreadCounts[user];
+  delete unreadCounts[user];
   localStorage.setItem("veyon_unread", JSON.stringify(unreadCounts));
   renderUsers();
 
-  chatTitle.textContent = user;
   chatBox.innerHTML = "";
 
   socket.emit("loadMessages", { withUser: user }, msgs => {
     msgs.forEach(renderMessage);
-    scrollIfNearBottom();
+    chatBox.scrollTop = chatBox.scrollHeight;
   });
 
   setTimeout(() => {
     input.disabled = false;
-    input.removeAttribute("disabled");
     input.focus();
   }, 100);
 
+}
 
-    unreadCounts[user] && delete unreadCounts[user];
-    localStorage.setItem("veyon_unread", JSON.stringify(unreadCounts));
-    renderUsers();
-
-    chatTitle.textContent = user;
-    chatBox.innerHTML = "";
-
-    socket.emit("loadMessages", { withUser: user }, msgs => {
-  msgs.forEach(renderMessage);
-  chatBox.scrollTop = chatBox.scrollHeight;
-
-  // ✅ focus input after chat opens
-  setTimeout(() => {
-  input.focus(); // desktop Safari/Chrome fix
-}, 50);
-
-});
-
-  }
 
   sendBtn.onclick = sendMessage;
   input.addEventListener("keydown", (e) => {
@@ -337,15 +313,15 @@ input.addEventListener("input", () => {
   }, 900);
 });
 
+ function sendMessage() {
+  if (!currentChat) return;
+  if (!input.value.trim() && !selectedMedia) return;
 
-  function sendMessage() {
-  if (!currentChat || !input.value.trim()) return;
-
-  socket.emit("sendMessage", {
+  const msg = {
     id: "msg_" + Date.now(),
     from: currentUser,
     to: currentChat,
-    text: input.value.trim(),
+    text: input.value.trim() || null,
     replyTo: replyTarget
       ? {
           id: replyTarget.id,
@@ -353,15 +329,32 @@ input.addEventListener("input", () => {
           text: replyTarget.text
         }
       : null
-  });
+  };
 
+  if (selectedMedia) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      msg.media = {
+        name: selectedMedia.name,
+        type: selectedMedia.type,
+        data: reader.result
+      };
+      socket.emit("sendMessage", msg);
+    };
+    reader.readAsDataURL(selectedMedia);
+  } else {
+    socket.emit("sendMessage", msg);
+  }
+
+  input.value = "";
+  mediaInput.value = "";
+  selectedMedia = null;
   replyTarget = null;
   replyPreview.classList.add("hidden");
-  input.value = "";
 
-  // 🔥 keep keyboard open
-  setTimeout(() => input.focus(), 0);
+  input.focus(); // keep keyboard open
 }
+
 
 
   socket.on("message", msg => {
@@ -396,67 +389,46 @@ input.addEventListener("input", () => {
  function renderMessage(msg) {
   const div = document.createElement("div");
   div.className = "message" + (msg.from === currentUser ? " me" : "");
-  div.dataset.id = msg.id;
 
-  // 🔁 Reply preview (unchanged)
   if (msg.replyTo) {
-    const replyBox = document.createElement("div");
-    replyBox.className = "reply-inside";
-    replyBox.innerHTML = `
-      <strong>${msg.replyTo.from}</strong>
-      <span>${msg.replyTo.text}</span>
-    `;
-    replyBox.onclick = () => jumpToMessage(msg.replyTo.id);
-    div.appendChild(replyBox);
+    const reply = document.createElement("div");
+    reply.className = "reply-inside";
+    reply.textContent = msg.replyTo.text;
+    div.appendChild(reply);
   }
 
-  // 🖼 IMAGE
-  if (msg.type === "image") {
-    const img = document.createElement("img");
-    img.src = msg.data;
-    img.style.maxWidth = "220px";
-    img.style.borderRadius = "10px";
-    img.style.cursor = "pointer";
-
-    div.appendChild(img);
+  if (msg.media) {
+    if (msg.media.type.startsWith("image/")) {
+      const img = document.createElement("img");
+      img.src = msg.media.data;
+      img.style.maxWidth = "220px";
+      img.style.borderRadius = "10px";
+      div.appendChild(img);
+    } else {
+      const video = document.createElement("video");
+      video.src = msg.media.data;
+      video.controls = true;
+      video.style.maxWidth = "240px";
+      div.appendChild(video);
+    }
   }
 
-  // 🎥 VIDEO
-  else if (msg.type === "video") {
-    const video = document.createElement("video");
-    video.src = msg.data;
-    video.controls = true;
-    video.style.maxWidth = "240px";
-    video.style.borderRadius = "10px";
-
-    div.appendChild(video);
-  }
-
-  // 💬 TEXT
-  else {
+  if (msg.text) {
     const text = document.createElement("div");
     text.textContent = msg.text;
     div.appendChild(text);
   }
 
-  // Click to reply
-  div.onclick = () => {
-    replyTarget = msg;
-    replyUser.textContent = msg.from;
-    replyText.textContent = msg.text || "Media";
-    replyPreview.classList.remove("hidden");
-    input.focus();
-  };
-
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
+
 
   cancelReplyBtn.onclick = () => {
     replyTarget = null;
     replyPreview.classList.add("hidden");
   };
-});
+
 
 function jumpToMessage(id) {
   const el = document.querySelector(`[data-id="${id}"]`);
@@ -488,3 +460,27 @@ document.addEventListener("touchend", (e) => {
     input.focus();
   }
 }, { passive: false });
+
+
+
+mediaInput.addEventListener("change", () => {
+  const file = mediaInput.files[0];
+  if (!file) return;
+
+  const isImage = file.type.startsWith("image/");
+  const isVideo = file.type.startsWith("video/");
+
+  if (isImage && file.size > 8 * 1024 * 1024) {
+    alert("Image must be under 8MB");
+    mediaInput.value = "";
+    return;
+  }
+
+  if (isVideo && file.size > 50 * 1024 * 1024) {
+    alert("Video must be under 50MB");
+    mediaInput.value = "";
+    return;
+  }
+
+  selectedMedia = file;
+});
