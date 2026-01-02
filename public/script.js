@@ -6,6 +6,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const loadingScreen = document.getElementById("loading-screen");
   const loginScreen = document.getElementById("login-screen");
   const app = document.getElementById("app");
+  const isMobile = window.innerWidth <= 768;
+
 
   const loginBtn = document.getElementById("login-btn");
   const loginError = document.getElementById("login-error");
@@ -97,6 +99,16 @@ socket.on("stopTyping", data => {
   }
 });
 
+const backBtn = document.getElementById("back-btn");
+if (backBtn) {
+  backBtn.onclick = () => {
+    document.querySelector(".chat-area").classList.remove("active");
+    document.querySelector(".chat-area").style.display = "none";
+    document.querySelector(".sidebar").style.display = "flex";
+    currentChat = null;
+  };
+}
+
 
   /* ========= LOGIN ========= */
   loginBtn.onclick = () => {
@@ -163,18 +175,52 @@ socket.on("stopTyping", data => {
     chatFooter.classList.add("hidden");
   }
 
-  function openChat(user) {
-    currentChat = user;
-    localStorage.setItem("veyon_last_chat", user);
+  function scrollIfNearBottom() {
+  const threshold = 120;
+  const position = chatBox.scrollTop + chatBox.clientHeight;
+  const height = chatBox.scrollHeight;
 
-    emptyChat.classList.add("hidden");
-    chatBox.classList.remove("hidden");
-    chatFooter.classList.remove("hidden");
-setTimeout(() => {
-  input.removeAttribute("readonly");
-  input.disabled = false;
-  input.focus();
-}, 100);
+  if (height - position < threshold) {
+    chatBox.scrollTop = height;
+  }
+}
+
+
+  function openChat(user) {
+  currentChat = user;
+  localStorage.setItem("veyon_last_chat", user);
+
+  const sidebar = document.querySelector(".sidebar");
+  const chatArea = document.querySelector(".chat-area");
+
+  // ✅ MOBILE NAVIGATION
+  if (isMobile) {
+    sidebar.style.display = "none";
+    chatArea.style.display = "flex";
+    chatArea.classList.add("active");
+  }
+
+  emptyChat.classList.add("hidden");
+  chatBox.classList.remove("hidden");
+  chatFooter.classList.remove("hidden");
+
+  unreadCounts[user] && delete unreadCounts[user];
+  localStorage.setItem("veyon_unread", JSON.stringify(unreadCounts));
+  renderUsers();
+
+  chatTitle.textContent = user;
+  chatBox.innerHTML = "";
+
+  socket.emit("loadMessages", { withUser: user }, msgs => {
+    msgs.forEach(renderMessage);
+    scrollIfNearBottom();
+  });
+
+  setTimeout(() => {
+    input.disabled = false;
+    input.focus();
+  }, 100);
+
 
     unreadCounts[user] && delete unreadCounts[user];
     localStorage.setItem("veyon_unread", JSON.stringify(unreadCounts));
@@ -300,11 +346,7 @@ input.addEventListener("input", () => {
     replyPreview.classList.add("hidden");
   };
 });
-document.addEventListener("click", () => {
-  if (currentChat && document.activeElement !== input) {
-    input.focus();
-  }
-});
+
 function jumpToMessage(id) {
   const el = document.querySelector(`[data-id="${id}"]`);
   if (!el) return;
@@ -313,4 +355,19 @@ function jumpToMessage(id) {
   el.classList.add("highlight");
 
   setTimeout(() => el.classList.remove("highlight"), 1200);
+}
+
+document.getElementById("back-btn").onclick = () => {
+  document.querySelector(".chat-area").classList.remove("active");
+  document.querySelector(".sidebar").style.display = "flex";
+  currentChat = null;
+};
+function scrollIfNearBottom() {
+  const threshold = 120;
+  const position = chatBox.scrollTop + chatBox.clientHeight;
+  const height = chatBox.scrollHeight;
+
+  if (height - position < threshold) {
+    chatBox.scrollTop = height;
+  }
 }
