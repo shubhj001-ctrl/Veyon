@@ -34,6 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let replyTarget = null;
   let allUsers = [];
   let unreadCounts = JSON.parse(localStorage.getItem("veyon_unread") || "{}");
+  let typingTimeout = null;
 
   /* ========= LOADER ========= */
   const brand = "Veyon";
@@ -68,6 +69,32 @@ startTypingOnce(() => {
     loadingScreen.style.display = "none";
     loginScreen.classList.remove("hidden");
   }, 600);
+});
+
+socket.on("typing", data => {
+  if (
+    data.from === currentChat &&
+    data.to === currentUser
+  ) {
+    typingBubble.classList.remove("hidden");
+    typingBubble.classList.add("show");
+
+    // ensure it stays at bottom of messages
+    chatBox.appendChild(typingBubble);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+});
+
+socket.on("stopTyping", data => {
+  if (
+    data.from === currentChat &&
+    data.to === currentUser
+  ) {
+    typingBubble.classList.remove("show");
+    setTimeout(() => {
+      typingBubble.classList.add("hidden");
+    }, 200);
+  }
 });
 
 
@@ -172,9 +199,26 @@ setTimeout(() => {
   sendBtn.onclick = sendMessage;
   input.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
-    e.preventDefault(); // prevent form submit
+    e.preventDefault();
     sendMessage();
   }
+});
+
+input.addEventListener("input", () => {
+  if (!currentChat) return;
+
+  socket.emit("typing", {
+    from: currentUser,
+    to: currentChat
+  });
+
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => {
+    socket.emit("stopTyping", {
+      from: currentUser,
+      to: currentChat
+    });
+  }, 900);
 });
 
 
@@ -230,4 +274,9 @@ setTimeout(() => {
     replyTarget = null;
     replyPreview.classList.add("hidden");
   };
+});
+document.addEventListener("click", () => {
+  if (currentChat && document.activeElement !== input) {
+    input.focus();
+  }
 });

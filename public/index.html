@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <title>Veyon</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +10,7 @@
 <div id="loading-screen">
   <div class="loading-box">
     <div id="loading-logo"></div>
-    <div id="loading-text">Your <span id="loading-word"></span> is loading</div>
+    <div id="loading-text">Your <span id="loading-logo"></span> is loading</div>
   </div>
 </div>
 
@@ -26,8 +26,8 @@
       <strong>work.shubhamjaggi@gmail.com</strong>
     </p>
 
-    <input id="login-username" placeholder="Username">
-    <input id="login-password" type="password" placeholder="Password">
+    <input id="login-username" placeholder="Username" autocomplete="off"
+    <input id="login-password" type="password" placeholder="Password" autocomplete="off"
 
     <button id="login-btn">Login</button>
 
@@ -67,7 +67,7 @@
     </div>
   </div>
 
-  <footer class="chat-input" id="chat-footer">
+  <footer class="chat-input hidden" id="chat-footer">
     <div id="reply-preview" class="reply-preview hidden">
       <div class="reply-line"></div>
       <div class="reply-content">
@@ -77,7 +77,7 @@
       <button id="cancel-reply">✕</button>
     </div>
 
-    <input id="message-input" placeholder="Type a message">
+    <input id="message-input" placeholder="Type a message" disabled>
     <button id="send-btn">Send</button>
   </footer>
 
