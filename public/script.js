@@ -109,6 +109,26 @@ if (backBtn) {
   };
 }
 
+if (window.visualViewport) {
+  const viewport = window.visualViewport;
+
+  function adjustForKeyboard() {
+    const keyboardHeight =
+      window.innerHeight - viewport.height - viewport.offsetTop;
+
+    if (keyboardHeight > 0) {
+      chatFooter.style.bottom = `${keyboardHeight}px`;
+    } else {
+      chatFooter.style.bottom = "0px";
+    }
+
+    // keep messages visible
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  viewport.addEventListener("resize", adjustForKeyboard);
+  viewport.addEventListener("scroll", adjustForKeyboard);
+}
 
   /* ========= LOGIN ========= */
   loginBtn.onclick = () => {
