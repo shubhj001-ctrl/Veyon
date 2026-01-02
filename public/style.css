@@ -571,3 +571,71 @@ body {
   z-index: 10000;
   position: relative;
 }
+/* =========================
+   MOBILE CHAT LAYOUT
+   ========================= */
+@media (max-width: 768px) {
+
+  /* App becomes single-column */
+  #app {
+    flex-direction: column;
+  }
+
+  /* Sidebar takes full screen */
+  .sidebar {
+    width: 100%;
+    height: 100vh;
+    border-right: none;
+  }
+
+  /* Hide chat area by default on mobile */
+  .chat-area {
+    display: none;
+    height: 100vh;
+  }
+
+  /* When chat is open */
+  .chat-area.active {
+    display: flex;
+  }
+
+  /* Hide empty chat on mobile */
+  .empty-chat {
+    display: none !important;
+  }
+
+  /* Chat header sticky */
+  .chat-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  /* Messages scroll naturally */
+  .chat-messages {
+    padding-bottom: 90px;
+  }
+
+  /* Input fixed at bottom */
+  .chat-input {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+  }
+}
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-only {
+    display: inline-block;
+    margin-right: 10px;
+    background: none;
+    border: none;
+    color: #caa960;
+    font-size: 20px;
+  }
+}
