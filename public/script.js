@@ -87,6 +87,9 @@ socket.on("typing", data => {
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 });
+socket.on("connect", () => {
+  console.log("✅ Socket connected");
+});
 
 socket.on("stopTyping", data => {
   if (
@@ -134,48 +137,6 @@ const mediaBtn = document.getElementById("media-btn");
 const mediaInput = document.getElementById("media-input");
 
 mediaBtn.onclick = () => mediaInput.click();
-
-mediaInput.addEventListener("change", () => {
-  const file = mediaInput.files[0];
-  if (!file) return;
-
-  const isImage = file.type.startsWith("image/");
-  const isVideo = file.type.startsWith("video/");
-
-  if (!isImage && !isVideo) {
-    alert("Only images and videos allowed");
-    return;
-  }
-
-  if (isImage && file.size > 8 * 1024 * 1024) {
-    alert("Image must be under 8MB");
-    return;
-  }
-
-  if (isVideo && file.size > 50 * 1024 * 1024) {
-    alert("Video must be under 50MB");
-    return;
-  }
-
-  selectedMedia = file;
-});
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    socket.emit("sendMedia", {
-      id: "msg_" + Date.now(),
-      from: currentUser,
-      to: currentChat,
-      type: isImage ? "image" : "video",
-      name: file.name,
-      data: reader.result
-    });
-  };
-
-  reader.readAsDataURL(file);
-  mediaInput.value = "";
-});
-
 
   /* ========= LOGIN ========= */
   loginBtn.onclick = () => {
@@ -243,18 +204,6 @@ function showEmptyChat() {
   chatFooter.classList.add("hidden");
 }
 
-
-  function scrollIfNearBottom() {
-  const threshold = 120;
-  const position = chatBox.scrollTop + chatBox.clientHeight;
-  const height = chatBox.scrollHeight;
-
-  if (height - position < threshold) {
-    chatBox.scrollTop = height;
-  }
-}
-
-
  function openChat(user) {
   currentChat = user;
   localStorage.setItem("veyon_last_chat", user);
@@ -277,6 +226,7 @@ function showEmptyChat() {
 
   socket.emit("loadMessages", { withUser: user }, msgs => {
     msgs.forEach(renderMessage);
+    scrollifnearBottom();
     chatBox.scrollTop = chatBox.scrollHeight;
   });
 
@@ -445,15 +395,6 @@ document.getElementById("back-btn").onclick = () => {
   document.querySelector(".sidebar").style.display = "flex";
   currentChat = null;
 };
-function scrollIfNearBottom() {
-  const threshold = 120;
-  const position = chatBox.scrollTop + chatBox.clientHeight;
-  const height = chatBox.scrollHeight;
-
-  if (height - position < threshold) {
-    chatBox.scrollTop = height;
-  }
-}
 document.addEventListener("touchend", (e) => {
   if (e.target === input) {
     e.preventDefault();
@@ -470,6 +411,11 @@ mediaInput.addEventListener("change", () => {
   const isImage = file.type.startsWith("image/");
   const isVideo = file.type.startsWith("video/");
 
+  if (!isImage && !isVideo) {
+    alert("Only images and videos allowed");
+    return;
+  }
+
   if (isImage && file.size > 8 * 1024 * 1024) {
     alert("Image must be under 8MB");
     mediaInput.value = "";
@@ -483,4 +429,5 @@ mediaInput.addEventListener("change", () => {
   }
 
   selectedMedia = file;
+});
 });
