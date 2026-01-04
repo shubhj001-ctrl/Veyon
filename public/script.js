@@ -275,7 +275,7 @@ input.addEventListener("input", () => {
   if (!currentChat) return;
   if (!input.value.trim() && !selectedMedia) return;
 
-  const msg = {
+  const baseMsg = {
     id: "msg_" + Date.now(),
     from: currentUser,
     to: currentChat,
@@ -289,28 +289,37 @@ input.addEventListener("input", () => {
       : null
   };
 
+  // CASE 1: MEDIA MESSAGE
   if (selectedMedia) {
     const reader = new FileReader();
 
     reader.onload = () => {
-      msg.media = {
-        type: selectedMedia.type,
-        name: selectedMedia.name,
-        data: reader.result
+      const mediaMsg = {
+        ...baseMsg,
+        media: {
+          name: selectedMedia.name,
+          type: selectedMedia.type,
+          data: reader.result
+        }
       };
 
-      socket.emit("sendMessage", msg);
+      socket.emit("sendMessage", mediaMsg);
     };
 
     reader.readAsDataURL(selectedMedia);
-  } else {
-    socket.emit("sendMessage", msg);
   }
 
-  // reset UI
+  // CASE 2: TEXT ONLY
+  else {
+    socket.emit("sendMessage", baseMsg);
+  }
+
+  // RESET UI (always)
   input.value = "";
   mediaInput.value = "";
   selectedMedia = null;
+  mediaThumb.innerHTML = "";
+  mediaPreview.classList.add("hidden");
   replyTarget = null;
   replyPreview.classList.add("hidden");
 
@@ -452,5 +461,13 @@ mediaInput.addEventListener("change", () => {
 
   mediaPreview.classList.remove("hidden");
 });
+removeMediaBtn.onclick = () => {
+  selectedMedia = null;
+  mediaInput.value = "";
+  mediaThumb.innerHTML = "";
+  mediaPreview.classList.add("hidden");
+  replyTarget = null;
+  replyPreview.classList.add("hidden");
+};
 
 });
