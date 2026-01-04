@@ -283,28 +283,31 @@ input.addEventListener("input", () => {
 
   if (selectedMedia) {
     const reader = new FileReader();
+
     reader.onload = () => {
       msg.media = {
-        name: selectedMedia.name,
         type: selectedMedia.type,
+        name: selectedMedia.name,
         data: reader.result
       };
+
       socket.emit("sendMessage", msg);
     };
+
     reader.readAsDataURL(selectedMedia);
   } else {
     socket.emit("sendMessage", msg);
   }
 
+  // reset UI
   input.value = "";
   mediaInput.value = "";
   selectedMedia = null;
   replyTarget = null;
   replyPreview.classList.add("hidden");
 
-  input.focus(); // keep keyboard open
+  input.focus();
 }
-
 
 
   socket.on("message", msg => {
@@ -436,22 +439,24 @@ mediaInput.addEventListener("change", () => {
   const isVideo = file.type.startsWith("video/");
 
   if (!isImage && !isVideo) {
-    alert("Only images and videos allowed");
+    alert("Only images or videos are allowed");
+    mediaInput.value = "";
     return;
   }
 
   if (isImage && file.size > 8 * 1024 * 1024) {
-    alert("Image must be under 8MB");
+    alert("Image must be under 8 MB");
     mediaInput.value = "";
     return;
   }
 
   if (isVideo && file.size > 50 * 1024 * 1024) {
-    alert("Video must be under 50MB");
+    alert("Video must be under 50 MB");
     mediaInput.value = "";
     return;
   }
 
   selectedMedia = file;
+  input.focus();
 });
 });
