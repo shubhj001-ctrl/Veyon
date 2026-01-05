@@ -140,11 +140,6 @@ const mediaBtn = document.getElementById("media-btn");
 const mediaInput = document.getElementById("media-input");
 
 mediaBtn.onclick = () => mediaInput.click();
-mediaInput.addEventListener("change", () => {
-  const file = mediaInput.files[0];
-  if (!file) return;
-  selectedMedia = file;
-});
 
   /* ========= LOGIN ========= */
   loginBtn.onclick = () => {
@@ -234,9 +229,7 @@ function showEmptyChat() {
 
   socket.emit("loadMessages", { withUser: user }, msgs => {
     msgs.forEach(renderMessage);
-    scrollifnearBottom();{
     chatBox.scrollTop = chatBox.scrollHeight;
-    }
   });
 
   setTimeout(() => {
@@ -275,49 +268,37 @@ function sendMessage() {
   if (!currentChat) return;
   if (!input.value.trim() && !selectedMedia) return;
 
-  const baseMsg = {
+  const msg = {
     id: "msg_" + Date.now(),
     from: currentUser,
     to: currentChat,
     text: input.value.trim() || null,
     replyTo: replyTarget
-      ? {
-          id: replyTarget.id,
-          from: replyTarget.from,
-          text: replyTarget.text
-        }
-      : null
+  ? {
+      id: replyTarget.id,
+      from: replyTarget.from,
+      text: replyTarget.text
+    }
+  : null
+
   };
 
-  // MEDIA MESSAGE
   if (selectedMedia) {
     const reader = new FileReader();
-
     reader.onload = () => {
-      const msg = {
-        ...baseMsg,
-        media: {
-          name: selectedMedia.name,
-          type: selectedMedia.type,
-          data: reader.result
-        }
+      msg.media = {
+        name: selectedMedia.name,
+        type: selectedMedia.type,
+        data: reader.result
       };
-
-      // 🔥 render ONCE (media guaranteed)
-      renderMessage(msg);
       socket.emit("sendMessage", msg);
     };
-
     reader.readAsDataURL(selectedMedia);
+  } else {
+    socket.emit("sendMessage", msg);
   }
 
-  // TEXT ONLY
-  else {
-    renderMessage(baseMsg);
-    socket.emit("sendMessage", baseMsg);
-  }
-
-  // RESET UI
+  // UI reset AFTER send
   input.value = "";
   mediaInput.value = "";
   selectedMedia = null;
@@ -328,34 +309,30 @@ function sendMessage() {
   input.focus();
 }
 
-
- socket.on("message", msg => {
-  // Ignore my own message (already rendered optimistically)
-  if (msg.from === currentUser) return;
-
+socket.on("message", msg => {
+  // Ignore messages not related to current chat
   if (
-    (msg.from === currentChat && msg.to === currentUser)
+    !(
+      (msg.from === currentChat && msg.to === currentUser) ||
+      (msg.from === currentUser && msg.to === currentChat)
+    )
   ) {
-    renderMessage(msg);
-  }
-});
-
-  socket.on("media", msg => {
-  if (
-    (msg.from === currentChat && msg.to === currentUser) ||
-    (msg.from === currentUser && msg.to === currentChat)
-  ) {
-    renderMessage(msg);
-  } else {
     unreadCounts[msg.from] = (unreadCounts[msg.from] || 0) + 1;
     localStorage.setItem("veyon_unread", JSON.stringify(unreadCounts));
     renderUsers();
+    return;
   }
+
+  // Prevent duplicate render (same id)
+  if (document.querySelector(`[data-id="${msg.id}"]`)) return;
+
+  renderMessage(msg);
 });
 
 
  function renderMessage(msg) {
   const div = document.createElement("div");
+  div.dataset.id = msg.id;
   div.className = "message" + (msg.from === currentUser ? " me" : "");
 
   // REPLY
@@ -430,21 +407,14 @@ mediaInput.addEventListener("change", () => {
   const file = mediaInput.files[0];
   if (!file) return;
 
-  const isImage = file.type.startsWith("image/");
-  const isVideo = file.type.startsWith("video/");
-
-  // size checks already done by you earlier
-
   selectedMedia = file;
   mediaThumb.innerHTML = "";
 
-  if (isImage) {
+  if (file.type.startsWith("image")) {
     const img = document.createElement("img");
     img.src = URL.createObjectURL(file);
     mediaThumb.appendChild(img);
-  }
-
-  if (isVideo) {
+  } else if (file.type.startsWith("video")) {
     const video = document.createElement("video");
     video.src = URL.createObjectURL(file);
     video.muted = true;
@@ -454,6 +424,7 @@ mediaInput.addEventListener("change", () => {
 
   mediaPreview.classList.remove("hidden");
 });
+
 removeMediaBtn.onclick = () => {
   selectedMedia = null;
   mediaInput.value = "";
