@@ -359,20 +359,6 @@ input.addEventListener("input", () => {
     }
   });
 
-  socket.on("media", msg => {
-  if (
-    (msg.from === currentChat && msg.to === currentUser) ||
-    (msg.from === currentUser && msg.to === currentChat)
-  ) {
-    renderMessage(msg);
-  } else {
-    unreadCounts[msg.from] = (unreadCounts[msg.from] || 0) + 1;
-    localStorage.setItem("veyon_unread", JSON.stringify(unreadCounts));
-    renderUsers();
-  }
-});
-
-
 function renderMessage(msg) {
   const div = document.createElement("div");
   div.className = "message" + (msg.from === currentUser ? " me" : "");
