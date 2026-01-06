@@ -326,10 +326,12 @@ input.addEventListener("input", () => {
       };
 
       socket.emit("sendMessage", msg);
+      renderMessage(msg); // 🔥 THIS WAS MISSING
     };
     reader.readAsDataURL(selectedMedia);
   } else {
     socket.emit("sendMessage", msg);
+    renderMessage(msg); // 🔥 THIS WAS MISSING
   }
 
   // Reset UI
