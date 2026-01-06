@@ -726,3 +726,11 @@ body {
   margin-top: 4px;
   text-align: right;
 }
+/* =========================
+   DESKTOP FONT SCALE (+2px)
+   ========================= */
+@media (min-width: 769px) {
+  body {
+    font-size: 16px; /* default is ~14px */
+  }
+}
