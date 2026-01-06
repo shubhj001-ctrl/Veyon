@@ -692,18 +692,25 @@ body {
 }
 
 .reply-inside {
+  display: inline-block;            /* 🔥 KEY FIX */
   max-width: 100%;
   font-size: 12px;
   opacity: 0.75;
+
   border-left: 3px solid #caa960;
-  padding-left: 8px;
-  margin-bottom: 4px;
+  padding: 4px 8px;
+  margin-bottom: 6px;
+
   background: rgba(0,0,0,0.15);
   border-radius: 6px;
+
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  cursor: pointer;
+}
+
+.message {
+  width: fit-content;
 }
 
 /* =========================
