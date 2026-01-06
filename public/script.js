@@ -140,6 +140,11 @@ const mediaBtn = document.getElementById("media-btn");
 const mediaInput = document.getElementById("media-input");
 
 mediaBtn.onclick = () => mediaInput.click();
+mediaInput.addEventListener("change", () => {
+  const file = mediaInput.files[0];
+  if (!file) return;
+  selectedMedia = file;
+});
 
   /* ========= LOGIN ========= */
   loginBtn.onclick = () => {
@@ -229,7 +234,9 @@ function showEmptyChat() {
 
   socket.emit("loadMessages", { withUser: user }, msgs => {
     msgs.forEach(renderMessage);
+    scrollifnearBottom();{
     chatBox.scrollTop = chatBox.scrollHeight;
+    }
   });
 
   setTimeout(() => {
@@ -264,41 +271,56 @@ input.addEventListener("input", () => {
   }, 900);
 });
 
+
+
 function sendMessage() {
   if (!currentChat) return;
   if (!input.value.trim() && !selectedMedia) return;
 
-  const msg = {
+  const mediaFile = selectedMedia; // 🔒 LOCK reference
+
+  const msgBase = {
     id: "msg_" + Date.now(),
     from: currentUser,
     to: currentChat,
     text: input.value.trim() || null,
     replyTo: replyTarget
-  ? {
-      id: replyTarget.id,
-      from: replyTarget.from,
-      text: replyTarget.text
-    }
-  : null
-
+      ? {
+          id: replyTarget.id,
+          from: replyTarget.from,
+          text: replyTarget.text
+        }
+      : null
   };
 
-  if (selectedMedia) {
+  // MEDIA MESSAGE
+  if (mediaFile) {
     const reader = new FileReader();
+
     reader.onload = () => {
-      msg.media = {
-        name: selectedMedia.name,
-        type: selectedMedia.type,
-        data: reader.result
+      const msg = {
+        ...msgBase,
+        media: {
+          name: mediaFile.name,
+          type: mediaFile.type,
+          data: reader.result
+        }
       };
+
       socket.emit("sendMessage", msg);
+      renderMessage(msg); // optimistic render
     };
-    reader.readAsDataURL(selectedMedia);
-  } else {
-    socket.emit("sendMessage", msg);
+
+    reader.readAsDataURL(mediaFile);
   }
 
-  // UI reset AFTER send
+  // TEXT ONLY
+  else {
+    socket.emit("sendMessage", msgBase);
+    renderMessage(msgBase);
+  }
+
+  // UI RESET (SAFE NOW)
   input.value = "";
   mediaInput.value = "";
   selectedMedia = null;
@@ -309,30 +331,34 @@ function sendMessage() {
   input.focus();
 }
 
-socket.on("message", msg => {
-  // Ignore messages not related to current chat
+
+ socket.on("message", msg => {
+  // Ignore my own message (already rendered optimistically)
+  if (msg.from === currentUser) return;
+
   if (
-    !(
-      (msg.from === currentChat && msg.to === currentUser) ||
-      (msg.from === currentUser && msg.to === currentChat)
-    )
+    (msg.from === currentChat && msg.to === currentUser)
   ) {
+    renderMessage(msg);
+  }
+});
+
+  socket.on("media", msg => {
+  if (
+    (msg.from === currentChat && msg.to === currentUser) ||
+    (msg.from === currentUser && msg.to === currentChat)
+  ) {
+    renderMessage(msg);
+  } else {
     unreadCounts[msg.from] = (unreadCounts[msg.from] || 0) + 1;
     localStorage.setItem("veyon_unread", JSON.stringify(unreadCounts));
     renderUsers();
-    return;
   }
-
-  // Prevent duplicate render (same id)
-  if (document.querySelector(`[data-id="${msg.id}"]`)) return;
-
-  renderMessage(msg);
 });
 
 
  function renderMessage(msg) {
   const div = document.createElement("div");
-  div.dataset.id = msg.id;
   div.className = "message" + (msg.from === currentUser ? " me" : "");
 
   // REPLY
@@ -407,14 +433,21 @@ mediaInput.addEventListener("change", () => {
   const file = mediaInput.files[0];
   if (!file) return;
 
+  const isImage = file.type.startsWith("image/");
+  const isVideo = file.type.startsWith("video/");
+
+  // size checks already done by you earlier
+
   selectedMedia = file;
   mediaThumb.innerHTML = "";
 
-  if (file.type.startsWith("image")) {
+  if (isImage) {
     const img = document.createElement("img");
     img.src = URL.createObjectURL(file);
     mediaThumb.appendChild(img);
-  } else if (file.type.startsWith("video")) {
+  }
+
+  if (isVideo) {
     const video = document.createElement("video");
     video.src = URL.createObjectURL(file);
     video.muted = true;
@@ -424,7 +457,6 @@ mediaInput.addEventListener("change", () => {
 
   mediaPreview.classList.remove("hidden");
 });
-
 removeMediaBtn.onclick = () => {
   selectedMedia = null;
   mediaInput.value = "";
