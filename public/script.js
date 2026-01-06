@@ -29,6 +29,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const replyUser = document.getElementById("reply-user");
   const replyText = document.getElementById("reply-text");
   const cancelReplyBtn = document.getElementById("cancel-reply");
+  const mediaPreview = document.getElementById("media-preview");
+const mediaPreviewImg = document.getElementById("media-preview-img");
+const removeMediaBtn = document.getElementById("remove-media");
+
 
   /* ========= STATE ========= */
   let currentUser = null;
@@ -484,19 +488,27 @@ mediaInput.addEventListener("change", () => {
 
   // Preview
   if (isImage) {
-    const reader = new FileReader();
-    reader.onload = () => {
-      mediaPreviewImg.src = reader.result;
-      mediaPreview.classList.remove("hidden");
-    };
-    reader.readAsDataURL(file);
+    // Preview
+const reader = new FileReader();
+reader.onload = () => {
+  if (isImage) {
+    mediaPreviewImg.src = reader.result;
+  } else {
+    mediaPreviewImg.src = "";
   }
-  removeMediaBtn.onclick = () => {
+  mediaPreview.classList.remove("hidden");
+};
+reader.readAsDataURL(file);
+
+  }
+  
+
+});
+removeMediaBtn.onclick = () => {
   selectedMedia = null;
   mediaInput.value = "";
   mediaPreview.classList.add("hidden");
   mediaPreviewImg.src = "";
 };
 
-});
 });
