@@ -1,7 +1,7 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
-
+const userSockets = new Map();
 const USERS = require("./defaultUsers");
 
 const app = express();
@@ -38,6 +38,7 @@ io.on("connection", socket => {
 
     socket.username = data.username;
     onlineUsers.add(data.username);
+    userSockets.set(data.username, socket.id);
 
     console.log("✅ Login success:", data.username);
 
@@ -78,22 +79,40 @@ io.on("connection", socket => {
 
   // SEND MESSAGE
   socket.on("sendMessage", msg => {
-    const key = chatKey(msg.from, msg.to);
-    if (!messages[key]) messages[key] = [];
-    messages[key].push(msg);
+  const key = chatKey(msg.from, msg.to);
+  if (!messages[key]) messages[key] = [];
+  messages[key].push(msg);
 
-    io.emit("message", msg);
-  });
+  const toSocket = userSockets.get(msg.to);
+  const fromSocket = userSockets.get(msg.from);
+
+  // send to receiver
+  if (toSocket) {
+    io.to(toSocket).emit("message", msg);
+  }
+
+  // send to sender (ONLY ONCE)
+  if (fromSocket && fromSocket !== toSocket) {
+    io.to(fromSocket).emit("message", msg);
+  }
+});
+
 
   // DISCONNECT
   socket.on("disconnect", () => {
-    console.log("❌ Disconnected:", socket.username);
+  if (socket.username) {
     onlineUsers.delete(socket.username);
-    io.emit("online", [...onlineUsers]);
-  });
+    userSockets.delete(socket.username);
+  }
+
+  io.emit("online", [...onlineUsers]);
+});
+
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log("🚀 Server running on port", PORT);
 });
+
+
