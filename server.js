@@ -1,3 +1,4 @@
+const db = require("./db");
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -102,19 +103,48 @@ io.on("connection", socket => {
     target?.emit("stopTyping", { from: socket.username, to });
   });
 
-  socket.on("loadMessages", ({ withUser }, cb) => {
-    const key = chatKey(socket.username, withUser);
-    cb(messages[key] || []);
-  });
+socket.on("loadMessages", ({ withUser }, cb) => {
+  if (!socket.username) return cb([]);
 
-  socket.on("sendMessage", msg => {
-    const key = chatKey(msg.from, msg.to);
-    messages[key] ??= [];
-    messages[key].push(msg);
+  const rows = db.prepare(`
+    SELECT * FROM messages
+    WHERE (sender = ? AND receiver = ?)
+       OR (sender = ? AND receiver = ?)
+    ORDER BY timestamp ASC
+  `).all(socket.username, withUser, withUser, socket.username);
 
-    userSockets.get(msg.to)?.emit("message", msg);
-    userSockets.get(msg.from)?.emit("message", msg);
-  });
+  cb(rows);
+});
+
+ socket.on("sendMessage", msg => {
+  if (!msg?.from || !msg?.to) return;
+
+  // 🔒 Hard-bind identity
+  if (!socket.username) {
+    socket.username = msg.from;
+    userSockets.set(msg.from, socket);
+    onlineUsers.add(msg.from);
+  }
+
+  db.prepare(`
+    INSERT INTO messages
+    (id, sender, receiver, text, mediaUrl, mediaType, timestamp)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    msg.id,
+    msg.from,
+    msg.to,
+    msg.text || null,
+    msg.media?.url || null,
+    msg.media?.type || null,
+    Date.now()
+  );
+
+  userSockets.get(msg.to)?.emit("message", msg);
+  userSockets.get(msg.from)?.emit("message", msg);
+});
+
+
 
   socket.on("disconnect", () => {
     if (socket.username) {

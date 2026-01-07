@@ -479,9 +479,9 @@ removeMediaBtn.onclick = () => {
 };
 
 socket.on("connect", () => {
-  const savedUser = localStorage.getItem("veyon_user");
-  if (savedUser) {
-    socket.emit("reconnectUser", savedUser);
+  const user = localStorage.getItem("veyon_user");
+  if (user) {
+    socket.emit("reconnectUser", user);
   }
 });
 
