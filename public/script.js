@@ -478,4 +478,12 @@ removeMediaBtn.onclick = () => {
   mediaPreviewImg.src = "";
 };
 
+socket.on("connect", () => {
+  const savedUser = localStorage.getItem("veyon_user");
+  if (savedUser) {
+    socket.emit("reconnectUser", savedUser);
+  }
+});
+
+
 });
