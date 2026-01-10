@@ -1,7 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
   let onlineSet = new Set();
 let lastSeenMap = {};
-  const socket = io();
+  // Initialize Socket.IO with reconnection settings for persistent real-time connection
+  const socket = io({
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    reconnectionAttempts: Infinity,
+    transports: ['websocket', 'polling']
+  });
   
 
   /* ========= ELEMENTS ========= */
@@ -172,29 +179,29 @@ const savedUser = localStorage.getItem("veyon_user");
 const savedPass = localStorage.getItem("veyon_pass");
 
 if (savedUser && savedPass) {
-  // Auto-login - skip loading animation
+  // Auto-login - skip loading screen completely and show app instantly
   loadingScreen.style.display = "none";
+  loginScreen.classList.add("hidden");
+  app.classList.remove("hidden");
   
   socket.emit("login", { username: savedUser, password: savedPass }, res => {
     if (res?.ok) {
       currentUser = savedUser;
-      loginScreen.classList.add("hidden");
-      app.classList.remove("hidden");
       allUsers = res.users;
       renderUsers();
       
-      // Restore previous chat if within 5 minutes
+      // Restore previous chat if within 10 minutes
       const lastChat = localStorage.getItem("veyon_last_chat");
       const chatTimestamp = localStorage.getItem("veyon_chat_timestamp");
       
       if (lastChat && chatTimestamp) {
         const elapsed = Date.now() - parseInt(chatTimestamp);
-        const fiveMinutes = 5 * 60 * 1000;
+        const tenMinutes = 10 * 60 * 1000;
         
-        if (elapsed < fiveMinutes && allUsers.includes(lastChat)) {
+        if (elapsed < tenMinutes && allUsers.includes(lastChat)) {
           setTimeout(() => {
             openChat(lastChat);
-          }, 300);
+          }, 100);
         } else {
           showEmptyChat();
         }
@@ -203,11 +210,8 @@ if (savedUser && savedPass) {
       }
     } else {
       // Failed auto-login, show login screen
-      loadingScreen.classList.add("fade-out");
-      setTimeout(() => {
-        loadingScreen.style.display = "none";
-        loginScreen.classList.remove("hidden");
-      }, 600);
+      loginScreen.classList.remove("hidden");
+      app.classList.add("hidden");
     }
   });
 } else {
@@ -238,6 +242,26 @@ socket.on("typing", data => {
 });
 socket.on("connect", () => {
   console.log("✅ Socket connected");
+  // If auto-logged in and have a saved chat, restore it
+  if (currentUser && !currentChat) {
+    const lastChat = localStorage.getItem("veyon_last_chat");
+    const chatTimestamp = localStorage.getItem("veyon_chat_timestamp");
+    if (lastChat && chatTimestamp) {
+      const elapsed = Date.now() - parseInt(chatTimestamp);
+      const tenMinutes = 10 * 60 * 1000;
+      if (elapsed < tenMinutes) {
+        openChat(lastChat);
+      }
+    }
+  }
+});
+
+socket.on("disconnect", () => {
+  console.log("❌ Socket disconnected");
+});
+
+socket.io.engine.on("upgrade", () => {
+  console.log("🔄 Socket upgraded");
 });
 
 socket.on("stopTyping", data => {

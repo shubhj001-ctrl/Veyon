@@ -52,6 +52,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
 
 const userSockets = new Map(); // username → socket
 const onlineUsers = new Set();
+const offlineMessages = new Map(); // username → array of messages
 
 const chatKey = (a, b) => [a, b].sort().join("|");
 
@@ -78,6 +79,15 @@ io.on("connection", socket => {
       users: Object.keys(USERS).filter(u => u !== data.username)
     });
 
+    // Deliver offline messages
+    if (offlineMessages.has(data.username)) {
+      const messages = offlineMessages.get(data.username);
+      messages.forEach(msg => {
+        socket.emit("message", msg);
+      });
+      offlineMessages.delete(data.username);
+    }
+
     io.emit("online", [...onlineUsers]);
   });
 
@@ -86,6 +96,16 @@ io.on("connection", socket => {
     socket.username = username;
     userSockets.set(username, socket);
     onlineUsers.add(username);
+
+    // Deliver offline messages
+    if (offlineMessages.has(username)) {
+      const messages = offlineMessages.get(username);
+      messages.forEach(msg => {
+        socket.emit("message", msg);
+      });
+      offlineMessages.delete(username);
+    }
+
     io.emit("online", [...onlineUsers]);
   });
 
@@ -121,6 +141,16 @@ io.on("connection", socket => {
     }
   });
 
+    /* ---------- REACTION ---------- */
+    socket.on('react', (payload) => {
+      // payload: { msgId, emoji, from, to }
+      if (!payload || !payload.from || !payload.to) return;
+
+      // deliver to recipient and sender so both see updated reactions
+      userSockets.get(payload.to)?.emit('reaction', payload);
+      userSockets.get(payload.from)?.emit('reaction', payload);
+    });
+
 socket.on("sendMessage", async msg => {
   if (!msg?.from || !msg?.to) return;
 
@@ -133,11 +163,22 @@ socket.on("sendMessage", async msg => {
   const key = chatKey(msg.from, msg.to);
   msg.createdAt = Date.now();
 
-  // ✅ 1. EMIT FIRST (REAL-TIME)
-  userSockets.get(msg.to)?.emit("message", msg);
+  // ✅ 1. EMIT TO ONLINE USER
+  const recipientSocket = userSockets.get(msg.to);
+  if (recipientSocket) {
+    recipientSocket.emit("message", msg);
+  } else {
+    // ✅ 2. STORE FOR OFFLINE USER
+    if (!offlineMessages.has(msg.to)) {
+      offlineMessages.set(msg.to, []);
+    }
+    offlineMessages.get(msg.to).push(msg);
+  }
+
+  // ✅ 3. EMIT TO SENDER
   userSockets.get(msg.from)?.emit("message", msg);
 
-  // ✅ 2. SAVE IN BACKGROUND (NON-BLOCKING)
+  // ✅ 4. SAVE IN BACKGROUND (NON-BLOCKING)
   saveMessage(msg, key).catch(err => {
     console.error("❌ Message save failed:", err.message);
   });
