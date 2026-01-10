@@ -66,6 +66,7 @@ body {
   display: flex;
   flex-direction: column;
   background: #3b3b3a;
+  position: relative;
 }
 
 .chat-area {
@@ -115,11 +116,6 @@ body {
   font-weight: 600;
 }
 
-.chat-status {
-  font-size: 12px;
-  opacity: 0.7;
-}
-
 /* Mobile polish */
 @media (max-width: 768px) {
   .chat-header {
@@ -133,10 +129,6 @@ body {
 
   .chat-username {
     font-size: 15px;
-  }
-
-  .chat-status {
-    font-size: 11px;
   }
 }
 
@@ -185,6 +177,7 @@ body {
 .chat-header {
   background: rgba(47, 47, 46, 0.75);
   backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(202,169,96,0.25);
 }
 
 
@@ -556,6 +549,9 @@ body {
 
   /* When chat is open */
   .chat-area.active {
+    display: flex;
+  }
+   .chat-area.active .chat-header {
     display: flex;
   }
 
