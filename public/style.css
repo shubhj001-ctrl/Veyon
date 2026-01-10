@@ -74,14 +74,72 @@ body {
 
 
 /* HEADER */
-.chat-header {
-  padding: 16px;
-  border-bottom: 1px solid rgba(202,169,96,0.2);
-  font-size: 16px;
+/* =========================
+   CHAT HEADER – APP STYLE
+========================= */
 
-  background: rgba(47,47,46,0.5);
-  backdrop-filter: blur(10px);
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
+
+.chat-header-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Avatar */
+.chat-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(202,169,96,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #caa960;
+  flex-shrink: 0;
+}
+
+.chat-user-meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.chat-username {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.chat-status {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* Mobile polish */
+@media (max-width: 768px) {
+  .chat-header {
+    padding: 12px 14px;
+  }
+
+  .chat-avatar {
+    width: 34px;
+    height: 34px;
+  }
+
+  .chat-username {
+    font-size: 15px;
+  }
+
+  .chat-status {
+    font-size: 11px;
+  }
+}
+
 
 /* DESKTOP */
 .chat-input {
@@ -99,6 +157,7 @@ body {
     left: 0;
     right: 0;
     z-index: 100;
+    padding-bottom: 14px;
   }
 }
 

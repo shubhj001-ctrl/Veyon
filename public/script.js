@@ -260,6 +260,15 @@ emptyChat.style.display = "none"; // 🔥 THIS FIXES IT
   currentChat = user;
   localStorage.setItem("veyon_last_chat", user);
 
+  // avatar letter
+document.getElementById("chat-avatar-letter").textContent =
+  user.charAt(0).toUpperCase();
+
+// status
+document.getElementById("chat-status").textContent = "online";
+document.getElementById("chat-status").textContent = "offline";
+
+
   if (isMobile) {
     document.querySelector(".sidebar").style.display = "none";
     document.querySelector(".chat-area").classList.add("active");
