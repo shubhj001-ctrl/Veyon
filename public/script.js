@@ -101,7 +101,45 @@ startTypingOnce(() => {
   loadingScreen.classList.add("fade-out");
   setTimeout(() => {
     loadingScreen.style.display = "none";
-    loginScreen.classList.remove("hidden");
+    
+    // Try auto-login
+    const savedUser = localStorage.getItem("veyon_user");
+    const savedPass = localStorage.getItem("veyon_pass");
+    
+    if (savedUser && savedPass) {
+      socket.emit("login", { username: savedUser, password: savedPass }, res => {
+        if (res?.ok) {
+          currentUser = savedUser;
+          loginScreen.classList.add("hidden");
+          app.classList.remove("hidden");
+          allUsers = res.users;
+          renderUsers();
+          
+          // Restore previous chat if within 5 minutes
+          const lastChat = localStorage.getItem("veyon_last_chat");
+          const chatTimestamp = localStorage.getItem("veyon_chat_timestamp");
+          
+          if (lastChat && chatTimestamp) {
+            const elapsed = Date.now() - parseInt(chatTimestamp);
+            const fiveMinutes = 5 * 60 * 1000;
+            
+            if (elapsed < fiveMinutes && allUsers.includes(lastChat)) {
+              setTimeout(() => {
+                openChat(lastChat);
+              }, 300);
+            } else {
+              showEmptyChat();
+            }
+          } else {
+            showEmptyChat();
+          }
+        } else {
+          loginScreen.classList.remove("hidden");
+        }
+      });
+    } else {
+      loginScreen.classList.remove("hidden");
+    }
   }, 600);
 });
 
@@ -246,25 +284,32 @@ updateSystemTime();
   };
 
   /* ========= USERS ========= */
-  function renderUsers() {
+  function renderUsers(filterText = "") {
     userList.innerHTML = "";
 
-    allUsers.forEach(u => {
-      const div = document.createElement("div");
-      div.className = "user-card";
-      div.textContent = u;
+    allUsers
+      .filter(u => u.toLowerCase().includes(filterText.toLowerCase()))
+      .forEach(u => {
+        const div = document.createElement("div");
+        div.className = "user-card";
+        div.textContent = u;
 
-      if (unreadCounts[u]) {
-        const badge = document.createElement("span");
-        badge.className = "unread-badge show";
-        badge.textContent = unreadCounts[u] > 9 ? "9+" : unreadCounts[u];
-        div.appendChild(badge);
-      }
+        if (unreadCounts[u]) {
+          const badge = document.createElement("span");
+          badge.className = "unread-badge show";
+          div.appendChild(badge);
+        }
 
-      div.onclick = () => openChat(u);
-      userList.appendChild(div);
-    });
+        div.onclick = () => openChat(u);
+        userList.appendChild(div);
+      });
   }
+
+  /* ========= USER SEARCH ========= */
+  const searchInput = document.getElementById("user-search");
+  searchInput.addEventListener("input", (e) => {
+    renderUsers(e.target.value);
+  });
 
   /* ========= CHAT ========= */
 function showEmptyChat() {
