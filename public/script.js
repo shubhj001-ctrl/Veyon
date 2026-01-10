@@ -97,51 +97,79 @@ function startTypingOnce(onComplete) {
     }
   }, 200);
 }
-startTypingOnce(() => {
-  loadingScreen.classList.add("fade-out");
-  setTimeout(() => {
-    loadingScreen.style.display = "none";
-    
-    // Try auto-login
-    const savedUser = localStorage.getItem("veyon_user");
-    const savedPass = localStorage.getItem("veyon_pass");
-    
-    if (savedUser && savedPass) {
-      socket.emit("login", { username: savedUser, password: savedPass }, res => {
-        if (res?.ok) {
-          currentUser = savedUser;
-          loginScreen.classList.add("hidden");
-          app.classList.remove("hidden");
-          allUsers = res.users;
-          renderUsers();
-          
-          // Restore previous chat if within 5 minutes
-          const lastChat = localStorage.getItem("veyon_last_chat");
-          const chatTimestamp = localStorage.getItem("veyon_chat_timestamp");
-          
-          if (lastChat && chatTimestamp) {
-            const elapsed = Date.now() - parseInt(chatTimestamp);
-            const fiveMinutes = 5 * 60 * 1000;
-            
-            if (elapsed < fiveMinutes && allUsers.includes(lastChat)) {
-              setTimeout(() => {
-                openChat(lastChat);
-              }, 300);
-            } else {
-              showEmptyChat();
-            }
-          } else {
-            showEmptyChat();
-          }
-        } else {
-          loginScreen.classList.remove("hidden");
-        }
-      });
+function startTypingOnce(onComplete) {
+  if (typingInterval) clearInterval(typingInterval);
+
+  loadingWord.textContent = "";
+  charIndex = 0;
+
+  typingInterval = setInterval(() => {
+    if (charIndex < brand.length) {
+      loadingWord.textContent += brand[charIndex];
+      charIndex++;
     } else {
-      loginScreen.classList.remove("hidden");
+      clearInterval(typingInterval);
+      typingInterval = null;
+
+      setTimeout(() => {
+        onComplete && onComplete();
+      }, 400);
     }
-  }, 600);
-});
+  }, 200);
+}
+
+const savedUser = localStorage.getItem("veyon_user");
+const savedPass = localStorage.getItem("veyon_pass");
+
+if (savedUser && savedPass) {
+  // Auto-login - skip loading animation
+  loadingScreen.style.display = "none";
+  
+  socket.emit("login", { username: savedUser, password: savedPass }, res => {
+    if (res?.ok) {
+      currentUser = savedUser;
+      loginScreen.classList.add("hidden");
+      app.classList.remove("hidden");
+      allUsers = res.users;
+      renderUsers();
+      
+      // Restore previous chat if within 5 minutes
+      const lastChat = localStorage.getItem("veyon_last_chat");
+      const chatTimestamp = localStorage.getItem("veyon_chat_timestamp");
+      
+      if (lastChat && chatTimestamp) {
+        const elapsed = Date.now() - parseInt(chatTimestamp);
+        const fiveMinutes = 5 * 60 * 1000;
+        
+        if (elapsed < fiveMinutes && allUsers.includes(lastChat)) {
+          setTimeout(() => {
+            openChat(lastChat);
+          }, 300);
+        } else {
+          showEmptyChat();
+        }
+      } else {
+        showEmptyChat();
+      }
+    } else {
+      // Failed auto-login, show login screen
+      loadingScreen.classList.add("fade-out");
+      setTimeout(() => {
+        loadingScreen.style.display = "none";
+        loginScreen.classList.remove("hidden");
+      }, 600);
+    }
+  });
+} else {
+  // No saved credentials - show loading animation
+  startTypingOnce(() => {
+    loadingScreen.classList.add("fade-out");
+    setTimeout(() => {
+      loadingScreen.style.display = "none";
+      loginScreen.classList.remove("hidden");
+    }, 600);
+  });
+}
 
 socket.on("typing", data => {
   if (
