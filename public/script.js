@@ -262,9 +262,7 @@ function showEmptyChat() {
   chatFooter.classList.add("hidden");
 }
 
-console.log("Opening chat:", user);
-
- function openChat(user) {
+function openChat(user) {
   emptyChat.classList.add("hidden");
 emptyChat.style.display = "none"; // 🔥 THIS FIXES IT
 
