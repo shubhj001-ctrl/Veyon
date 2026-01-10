@@ -193,7 +193,21 @@ const mediaBtn = document.getElementById("media-btn");
 const mediaInput = document.getElementById("media-input");
 
 mediaBtn.onclick = () => mediaInput.click();
+/* ========= SYSTEM TIME ========= */
+function updateSystemTime() {
+  const timeEl = document.getElementById("chat-system-time");
+  if (timeEl) {
+    const now = new Date();
+    timeEl.textContent = now.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  }
+}
 
+// Update time every minute
+setInterval(updateSystemTime, 60000);
+updateSystemTime();
   /* ========= LOGIN ========= */
   loginBtn.onclick = () => {
     const u = usernameInput.value.trim();
@@ -269,6 +283,7 @@ emptyChat.style.display = "none"; // 🔥 THIS FIXES IT
   currentChat = user;
 
   localStorage.setItem("veyon_last_chat", user);
+  localStorage.setItem("veyon_chat_timestamp", Date.now().toString());
 
   // avatar letter
 document.getElementById("chat-avatar-letter").textContent =
@@ -389,19 +404,8 @@ input.addEventListener("input", () => {
 }
 
 function renderMessage(msg) {
-  const wrapper = document.createElement("div");
-  wrapper.className = "message-wrapper" + (msg.from === currentUser ? " me" : "");
-
-  // Add avatar for received messages
-  if (msg.from !== currentUser) {
-    const avatar = document.createElement("div");
-    avatar.className = "message-avatar";
-    avatar.textContent = msg.from.charAt(0).toUpperCase();
-    wrapper.appendChild(avatar);
-  }
-
   const div = document.createElement("div");
-  div.className = "message";
+  div.className = "message" + (msg.from === currentUser ? " me" : "");
   div.dataset.id = msg.id;
 
   div.oncontextmenu = (e) => {
@@ -449,8 +453,7 @@ function renderMessage(msg) {
   });
   div.appendChild(time);
 
-  wrapper.appendChild(div);
-  chatBox.appendChild(wrapper);
+  chatBox.appendChild(div);
   requestAnimationFrame(() => {
   chatBox.scrollTop = chatBox.scrollHeight;
 });
@@ -521,6 +524,21 @@ socket.on("connect", () => {
   const user = localStorage.getItem("veyon_user");
   if (user) {
     socket.emit("reconnectUser", user);
+
+    // Restore previous chat if within 5 minutes
+    const lastChat = localStorage.getItem("veyon_last_chat");
+    const chatTimestamp = localStorage.getItem("veyon_chat_timestamp");
+    
+    if (lastChat && chatTimestamp) {
+      const elapsed = Date.now() - parseInt(chatTimestamp);
+      const fiveMinutes = 5 * 60 * 1000;
+      
+      if (elapsed < fiveMinutes && allUsers.includes(lastChat)) {
+        setTimeout(() => {
+          openChat(lastChat);
+        }, 500);
+      }
+    }
   }
 });
 

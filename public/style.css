@@ -116,6 +116,13 @@ body {
   font-weight: 600;
 }
 
+.chat-system-time {
+  font-size: 12px;
+  opacity: 0.7;
+  color: rgba(202,169,96,0.8);
+  margin-top: 2px;
+}
+
 /* Mobile polish */
 @media (max-width: 768px) {
   .chat-header {
@@ -200,6 +207,24 @@ body {
     opacity: 1;
     transform: translateY(0) scale(1);
     filter: blur(0);
+  }
+}
+
+@keyframes gellyBounce {
+  0% {
+    opacity: 0;
+    transform: translateY(60px) scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-8px) scale(1.08);
+  }
+  75% {
+    transform: translateY(2px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 /* LOGIN SCREEN */
@@ -680,7 +705,7 @@ body {
   padding-bottom: 110px; /* Extra space for input */
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 10px;
 }
 
 /* =========================
@@ -745,7 +770,7 @@ body {
   border-radius: 12px;
   font-size: 14px;
   background: rgba(202,169,96,0.14);
-  animation: messageIn 240ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  animation: gellyBounce 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
    word-break: break-word;
   overflow-wrap: anywhere;
   white-space: normal;
@@ -755,33 +780,6 @@ body {
   align-self: flex-end;
   background: rgba(202,169,96,0.85);
   color: #2f2f2e;
-}
-
-/* Message wrapper with avatar */
-.message-wrapper {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-
-.message-wrapper.me {
-  flex-direction: row-reverse;
-}
-
-/* Avatar bubble */
-.message-avatar {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  border-radius: 50%;
-  background: rgba(202,169,96,0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 12px;
-  color: #caa960;
 }
 
 /* Mobile adjustments for images */
