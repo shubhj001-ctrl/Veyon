@@ -121,29 +121,27 @@ io.on("connection", socket => {
     }
   });
 
-  /* ---------- SEND MESSAGE ---------- */
-  socket.on("sendMessage", async msg => {
-    if (!msg?.from || !msg?.to) return;
+socket.on("sendMessage", async msg => {
+  if (!msg?.from || !msg?.to) return;
 
-    // bind identity safely
-    if (!socket.username) {
-      socket.username = msg.from;
-      userSockets.set(msg.from, socket);
-      onlineUsers.add(msg.from);
-    }
+  if (!socket.username) {
+    socket.username = msg.from;
+    userSockets.set(msg.from, socket);
+    onlineUsers.add(msg.from);
+  }
 
-    const key = chatKey(msg.from, msg.to);
-    msg.createdAt = Date.now();
+  const key = chatKey(msg.from, msg.to);
+  msg.createdAt = Date.now();
 
-    try {
-      await saveMessage(msg, key);
+  // ✅ 1. EMIT FIRST (REAL-TIME)
+  userSockets.get(msg.to)?.emit("message", msg);
+  userSockets.get(msg.from)?.emit("message", msg);
 
-      userSockets.get(msg.to)?.emit("message", msg);
-      userSockets.get(msg.from)?.emit("message", msg);
-    } catch (err) {
-      console.error("❌ Message save failed", err);
-    }
+  // ✅ 2. SAVE IN BACKGROUND (NON-BLOCKING)
+  saveMessage(msg, key).catch(err => {
+    console.error("❌ Message save failed:", err.message);
   });
+});
 
   /* ---------- DISCONNECT ---------- */
   socket.on("disconnect", () => {
