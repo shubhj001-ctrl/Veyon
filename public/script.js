@@ -389,8 +389,19 @@ input.addEventListener("input", () => {
 }
 
 function renderMessage(msg) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "message-wrapper" + (msg.from === currentUser ? " me" : "");
+
+  // Add avatar for received messages
+  if (msg.from !== currentUser) {
+    const avatar = document.createElement("div");
+    avatar.className = "message-avatar";
+    avatar.textContent = msg.from.charAt(0).toUpperCase();
+    wrapper.appendChild(avatar);
+  }
+
   const div = document.createElement("div");
-  div.className = "message" + (msg.from === currentUser ? " me" : "");
+  div.className = "message";
   div.dataset.id = msg.id;
 
   div.oncontextmenu = (e) => {
@@ -438,7 +449,8 @@ function renderMessage(msg) {
   });
   div.appendChild(time);
 
-  chatBox.appendChild(div);
+  wrapper.appendChild(div);
+  chatBox.appendChild(wrapper);
   requestAnimationFrame(() => {
   chatBox.scrollTop = chatBox.scrollHeight;
 });

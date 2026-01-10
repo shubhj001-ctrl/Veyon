@@ -680,7 +680,7 @@ body {
   padding-bottom: 110px; /* Extra space for input */
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 2px;
 }
 
 /* =========================
@@ -755,6 +755,52 @@ body {
   align-self: flex-end;
   background: rgba(202,169,96,0.85);
   color: #2f2f2e;
+}
+
+/* Message wrapper with avatar */
+.message-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.message-wrapper.me {
+  flex-direction: row-reverse;
+}
+
+/* Avatar bubble */
+.message-avatar {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: rgba(202,169,96,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 12px;
+  color: #caa960;
+}
+
+/* Mobile adjustments for images */
+@media (max-width: 768px) {
+  .chat-messages {
+    padding-bottom: 140px;
+  }
+
+  .message {
+    max-width: 85%;
+    font-size: 14px;
+  }
+
+  .message img,
+  .message video {
+    max-width: 100% !important;
+    max-height: 300px !important;
+    display: block;
+  }
 }
 
 .reply-inside {
