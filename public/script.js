@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let onlineSet = new Set();
 let lastSeenMap = {};
   const socket = io();
+  
 
   /* ========= ELEMENTS ========= */
   const loadingScreen = document.getElementById("loading-screen");
@@ -9,7 +10,6 @@ let lastSeenMap = {};
   const app = document.getElementById("app");
   const isMobile = window.innerWidth <= 768;
 
-  const chatStatus = document.getElementById("chat-status");
   const loginBtn = document.getElementById("login-btn");
   const loginError = document.getElementById("login-error");
   const usernameInput = document.getElementById("login-username");
@@ -152,11 +152,16 @@ socket.on("message", msg => {
 
 const backBtn = document.getElementById("back-btn");
 if (backBtn) {
-  backBtn.onclick = () => {
-    document.querySelector(".chat-area").classList.remove("active");
-    document.querySelector(".sidebar").style.display = "flex";
-    currentChat = null;
-  };
+backBtn.onclick = () => {
+  const sidebar = document.querySelector(".sidebar");
+  const chatArea = document.querySelector(".chat-area");
+
+  chatArea.classList.remove("active");
+  chatArea.style.display = "none";
+  sidebar.style.display = "flex";
+
+  currentChat = null;
+};
 }
 
 if (window.visualViewport) {
@@ -253,28 +258,29 @@ function showEmptyChat() {
   chatFooter.classList.add("hidden");
 }
 
+console.log("Opening chat:", user);
 
  function openChat(user) {
   emptyChat.classList.add("hidden");
 emptyChat.style.display = "none"; // 🔥 THIS FIXES IT
 
   currentChat = user;
-  chatStatus.textContent = "online";
+
   localStorage.setItem("veyon_last_chat", user);
 
   // avatar letter
 document.getElementById("chat-avatar-letter").textContent =
   user.charAt(0).toUpperCase();
 
-// status
-document.getElementById("chat-status").textContent = "online";
-document.getElementById("chat-status").textContent = "offline";
-
 
   if (isMobile) {
-    document.querySelector(".sidebar").style.display = "none";
-    document.querySelector(".chat-area").classList.add("active");
-  }
+  const sidebar = document.querySelector(".sidebar");
+  const chatArea = document.querySelector(".chat-area");
+
+  sidebar.style.display = "none";
+  chatArea.classList.add("active");
+  chatArea.style.display = "flex"; // 🔥 FORCE REPAINT
+}
 
   chatTitle.textContent = user;
   chatBox.classList.remove("hidden");
@@ -298,16 +304,6 @@ socket.emit("loadMessages", { withUser: user }, msgs => {
   }, 100);
 
 }
-
-socket.on("online", users => {
-  onlineSet = new Set(users);
-
-  if (currentChat) {
-    updateHeaderStatus(currentChat);
-  }
-});
-
-
 
   sendBtn.onclick = sendMessage;
   input.addEventListener("keydown", (e) => {
