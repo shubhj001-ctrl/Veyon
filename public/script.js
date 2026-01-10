@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
-  
+  let onlineSet = new Set();
+let lastSeenMap = {};
   const socket = io();
 
   /* ========= ELEMENTS ========= */
@@ -8,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const app = document.getElementById("app");
   const isMobile = window.innerWidth <= 768;
 
-
+  const chatStatus = document.getElementById("chat-status");
   const loginBtn = document.getElementById("login-btn");
   const loginError = document.getElementById("login-error");
   const usernameInput = document.getElementById("login-username");
@@ -258,6 +259,7 @@ function showEmptyChat() {
 emptyChat.style.display = "none"; // 🔥 THIS FIXES IT
 
   currentChat = user;
+  chatStatus.textContent = "online";
   localStorage.setItem("veyon_last_chat", user);
 
   // avatar letter
@@ -296,6 +298,15 @@ socket.emit("loadMessages", { withUser: user }, msgs => {
   }, 100);
 
 }
+
+socket.on("online", users => {
+  onlineSet = new Set(users);
+
+  if (currentChat) {
+    updateHeaderStatus(currentChat);
+  }
+});
+
 
 
   sendBtn.onclick = sendMessage;
