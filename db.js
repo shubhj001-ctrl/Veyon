@@ -3,17 +3,26 @@ const mongoose = require("mongoose");
 const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
-  throw new Error("❌ MONGO_URI missing in environment variables");
+  console.error("❌ MONGO_URI missing");
+  process.exit(1);
 }
 
 mongoose.connect(MONGO_URI, {
   dbName: "veyon",
+  serverSelectionTimeoutMS: 30000, // ⏳ wait longer
+  socketTimeoutMS: 45000,
 })
-.then(() => console.log("✅ MongoDB connected"))
+.then(() => {
+  console.log("✅ MongoDB connected");
+})
 .catch(err => {
-  console.error("❌ MongoDB connection failed", err);
-  process.exit(1);
+  console.error("❌ MongoDB connection error (will retry):", err.message);
+  // ❌ DO NOT exit process
 });
+
+/* =========================
+   SCHEMA
+========================= */
 
 const messageSchema = new mongoose.Schema({
   chatKey: String,
@@ -33,12 +42,8 @@ const messageSchema = new mongoose.Schema({
 
 const Message = mongoose.model("Message", messageSchema);
 
-/* =========================
-   HELPERS
-========================= */
-
 async function saveMessage(msg, chatKey) {
-  await Message.create({
+  return Message.create({
     chatKey,
     from: msg.from,
     to: msg.to,
@@ -53,7 +58,4 @@ async function loadMessages(chatKey) {
   return Message.find({ chatKey }).sort({ createdAt: 1 }).lean();
 }
 
-module.exports = {
-  saveMessage,
-  loadMessages
-};
+module.exports = { saveMessage, loadMessages };
