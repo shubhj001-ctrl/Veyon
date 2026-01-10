@@ -114,7 +114,7 @@ socket.on("typing", data => {
 
     // ensure it stays at bottom of messages
     chatBox.appendChild(typingBubble);
-    chatBox.scrollTop = chatBox.scrollHeight;
+    chatBox.scrollTop = chatBox.scrollHeight + 200;
   }
 });
 socket.on("connect", () => {
@@ -172,7 +172,7 @@ if (window.visualViewport) {
     }
 
     // keep messages visible
-    chatBox.scrollTop = chatBox.scrollHeight;
+    chatBox.scrollTop = chatBox.scrollHeight + 200;
   }
 
   viewport.addEventListener("resize", adjustForKeyboard);
@@ -277,7 +277,7 @@ emptyChat.style.display = "none"; // 🔥 THIS FIXES IT
 
 socket.emit("loadMessages", { withUser: user }, msgs => {
   msgs.forEach(renderMessage);
-  chatBox.scrollTop = chatBox.scrollHeight;
+  chatBox.scrollTop = chatBox.scrollHeight + 200;
 });
 
 
@@ -427,7 +427,7 @@ function renderMessage(msg) {
   div.appendChild(time);
 
   chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
+  chatBox.scrollTop = chatBox.scrollHeight + 200;
 }
 
   cancelReplyBtn.onclick = () => {
